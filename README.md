@@ -50,6 +50,15 @@ docs/example-prd.md                                  # 예시 PRD (청첩장모�
 scripts/                                             # check_phase · figma_snapshot · figma_audit · build_hub + 테스트
 ```
 
+## 전체 흐름 한눈에
+
+**[FigJam 흐름도 열기](https://www.figma.com/board/BW8kTvRl6xeGHp1cOMOgHw)** — "디자인 도우미 전체 흐름 (최종, 위에서 아래)"
+
+1. **대화로 정하기** 기획서 → 화면 목록 → 눌러보며 순서 확인 → 비슷한 앱 → 스타일(색상 / 모양·간격 / 글자) → 아이콘 → 규칙 → 최종 미리보기. 모든 탭은 허브 링크 하나에 쌓이고, 사용자는 "추천대로 / 다르게"만 고른다.
+2. **자동 점검** 빠진 것이 있으면 되돌아가고, Figma 로그인이 안 됐으면 규칙 문서까지만 전달한다.
+3. **Figma로 만들기** 색·글자·간격 → 부품 → 화면. 단계마다 스크린샷을 확인한다.
+4. **검사하기** 숫자로 자동 검사 → 눈으로 검사 → 작은 문제는 그 부분만 고치고, 방향이 틀리면 스타일로 되돌아가고, 3번 반복 실패면 사람이 결정한다.
+
 ## 사용법
 
 PRD 하나만 있으면 시작할 수 있다. 예시 PRD는 `docs/example-prd.md`.
@@ -60,7 +69,7 @@ PRD 하나만 있으면 시작할 수 있다. 예시 PRD는 `docs/example-prd.md
 4. 규칙이 확정되면 figma-builder가 토큰 → 컴포넌트 → 화면을 만들고, 단계마다 스크린샷을 확인한다. design-auditor가 검수하고 결함은 자동으로 고친다.
 5. 산출물은 프로젝트의 `design/` 폴더에 쌓인다 (git 추적 제외). Figma 파일과 `design/design-rules.md`를 개발 쪽에 넘기면 끝이다.
 
-검증 스크립트는 `scripts/README.md`, 전체 흐름도는 [FigJam](https://www.figma.com/board/BW8kTvRl6xeGHp1cOMOgHw) 참고.
+검증 스크립트는 `scripts/README.md` 참고.
 
 ## 라이선스
 
