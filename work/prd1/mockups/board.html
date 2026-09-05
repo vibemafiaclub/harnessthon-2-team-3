@@ -1,0 +1,791 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>청첩장모임 스케줄러 — 목업 3안 (B-3.5)</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.css">
+<link href="https://fonts.googleapis.com/css2?family=Nanum+Myeongjo:wght@400;700;800&display=swap" rel="stylesheet">
+<style>
+/* ============================================================
+   토큰 — 구조는 3안이 공유하고, 값만 테마가 갈아끼운다.
+   이 구조 자체가 곧 디자인 시스템이고, 고른 안의 값이 DESIGN.md가 된다.
+   ============================================================ */
+:root{
+  /* 타이포 스케일 — 크기 5종 / weight 2종 / 행간 1.5 단일 (display만 1.15)
+     근거: KRDS 한글 본문 17px·150%, 크기 4종(19/17/15/13) [ref-11]
+           한글 자간 −0.3px (라틴과 반대 방향) [ref-15] */
+  --font-body:Pretendard,-apple-system,BlinkMacSystemFont,'Apple SD Gothic Neo',sans-serif;
+  --font-display:var(--font-body);
+
+  --fs-hero:44px;     --lh-hero:1.05;
+  --fs-display:30px;  --lh-display:1.15; --ls-display:-1px;
+  --fs-title:19px;    --lh-title:1.4;    --ls-title:-0.3px;
+  --fs-body-lg:17px;  --lh-body:1.5;     --ls-body:-0.3px;
+  --fs-body:15px;
+  --fs-caption:13px;  --ls-caption:-0.2px;
+  --fw-normal:400;    --fw-bold:700;
+
+  /* 간격 — 4px 배수 6종 [ref-13] */
+  --sp-1:4px; --sp-2:8px; --sp-3:12px; --sp-4:16px; --sp-6:24px; --sp-8:32px;
+
+  /* 모서리 — 4종 [ref-13의 7종에서 축약] */
+  --r-sm:6px; --r-md:10px; --r-lg:16px; --r-full:999px;
+
+  /* 모바일 고정 제약 — 터치 타깃 48dp [ref-07, material-components-android] */
+  --touch:48px; --touch-lg:52px;
+  --safe-top:59px; --safe-bottom:34px;
+  --gutter:var(--sp-5,20px); --sp-5:20px;
+}
+
+/* ---------- 테마 1 · 추천안 : warm stone + 액센트 1색 ---------- */
+.t-rec{
+  --surface:#FAFAF9;            /* stone-50  앱 배경 */
+  --surface-container:#FFFFFF;  /*           카드 */
+  --surface-subtle:#F5F5F4;     /* stone-100 */
+  --outline:#E7E5E4;            /* stone-200 구분선 */
+  --outline-strong:#D6D3D1;     /* stone-300 보더 */
+  --on-surface:#1C1917;         /* stone-900 본문        16.7:1 */
+  --on-surface-variant:#78716C; /* stone-500 보조         4.59:1 */
+  --on-surface-muted:#A8A29E;   /* stone-400 ⚠ 비텍스트 전용 2.41:1 */
+  --primary:#B0442A;            /*           액센트 1색   5.43:1 */
+  --on-primary:#FFFFFF;         /*                        5.67:1 */
+  --primary-container:#FBEEEA;
+  --outline-primary:#F0D9D1;
+}
+/* ---------- 테마 2 · 무난함 : 웨딩 카테고리 중앙값 ---------- */
+.t-safe{
+  --font-display:'Nanum Myeongjo',serif;
+  --fs-hero:52px;
+  --surface:#FDF7F6;
+  --surface-container:#FFFFFF;
+  --surface-subtle:#FBEFF0;
+  --outline:#F0E2DF;
+  --outline-strong:#E3CFCC;
+  --on-surface:#3D2F2C;         /* 12.1:1 */
+  --on-surface-variant:#7D6663; /*  5.01:1 */
+  --on-surface-muted:#B8A5A2;   /* ⚠ 비텍스트 전용 */
+  --primary:#A34A58;            /*  5.39:1 · 흰글자 5.71:1 */
+  --on-primary:#FFFFFF;
+  --primary-container:#FBEFF0;
+  --outline-primary:#F0D9DC;
+  --decor:#D98A94;              /* ⚠ 장식 전용 — 텍스트 금지 2.47:1 */
+  --r-full:999px;
+}
+/* ---------- 테마 3 · 도전 : 액센트 0색 ---------- */
+.t-bold{
+  --fs-hero:28px; --lh-hero:1.18;
+  --surface:#FFFFFF;
+  --surface-container:#FFFFFF;
+  --surface-subtle:#FAFAFA;
+  --outline:#E8E8E6;
+  --outline-strong:#0E0E0C;
+  --on-surface:#0E0E0C;         /* 19.3:1 */
+  --on-surface-variant:#6E6E68; /*  5.13:1 */
+  --on-surface-muted:#A5A5A0;   /* ⚠ 비텍스트 전용 */
+  --primary:#0E0E0C;            /* 액센트가 없으므로 본문색이 그 자리를 겸한다 */
+  --on-primary:#FFFFFF;
+  --primary-container:#FAFAFA;
+  --outline-primary:#E8E8E6;
+  --r-md:13px; --r-lg:20px;
+}
+
+/* ============================================================ 공유 컴포넌트 */
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:var(--font-body);background:#16161a;color:#e8e6e3;padding:32px 24px 80px;line-height:1.5}
+
+.board-head{max-width:1360px;margin:0 auto 28px}
+.board-head h1{font-size:24px;font-weight:800;letter-spacing:-0.4px;margin-bottom:6px}
+.board-head .sub{font-size:14px;color:#a09b95;margin-bottom:20px}
+.notice{border:1px solid #3a3a42;border-left:3px solid #c9793f;background:#1e1e24;padding:14px 16px;border-radius:6px;font-size:13px;color:#c9c5c0;max-width:880px;margin-bottom:14px}
+.notice b{color:#f0ede9}
+.notice code{font-size:12px;background:#2a2a32;padding:1px 5px;border-radius:3px}
+.howto{font-size:13px;color:#a09b95;max-width:880px}
+.howto li{margin:4px 0 4px 18px}
+
+.cols{display:flex;gap:28px;max-width:1360px;margin:0 auto;align-items:flex-start;overflow-x:auto;padding-bottom:20px}
+.col{flex:0 0 auto;width:420px}
+.col-head{padding:0 10px 16px}
+.col-head .tag{display:inline-block;font-size:11px;font-weight:700;letter-spacing:.6px;padding:4px 9px;border-radius:3px;margin-bottom:9px}
+.c1 .tag{background:#B0442A;color:#fff}
+.c2 .tag{background:#A34A58;color:#fff}
+.c3 .tag{background:#e8e6e3;color:#16161a}
+.col-head h2{font-size:19px;font-weight:800;letter-spacing:-0.3px;margin-bottom:6px}
+.col-head p{font-size:13px;color:#a09b95;margin-bottom:12px}
+.axes{width:100%;border-collapse:collapse;font-size:11.5px}
+.axes td{padding:5px 7px;border-top:1px solid #2e2e36;vertical-align:top;color:#c9c5c0}
+.axes td:first-child{color:#787370;white-space:nowrap;width:70px}
+.risk{font-size:11.5px;color:#8b8580;padding:9px 7px 0;line-height:1.55}
+.risk b{color:#c9793f}
+
+/* 토큰 패널 — 각 안의 디자인 시스템을 눈에 보이게 */
+.tokens{margin:14px 7px 0;border:1px solid #2e2e36;border-radius:6px;padding:11px 12px;background:#1a1a20}
+.tokens h3{font-size:10.5px;letter-spacing:1px;color:#787370;font-weight:700;margin-bottom:9px}
+.swatches{display:flex;flex-wrap:wrap;gap:5px;margin-bottom:10px}
+.sw{width:30px;height:30px;border-radius:4px;border:1px solid #34343c;position:relative}
+.sw::after{content:attr(data-n);position:absolute;bottom:-13px;left:0;font-size:8px;color:#5f5b58;white-space:nowrap}
+.swatches{margin-bottom:22px}
+.tkrow{display:flex;font-size:10.5px;color:#a09b95;padding:3px 0;gap:8px}
+.tkrow span:first-child{color:#6b6763;flex:0 0 62px}
+.tkrow b{color:#d6d2ce;font-weight:600}
+
+.frames{display:flex;flex-direction:column;gap:22px;align-items:center}
+.fwrap{width:390px}
+.flabel{font-size:11.5px;color:#787370;padding:0 2px 6px;letter-spacing:.3px}
+
+/* ---- 폰 셸 ---- */
+.phone{width:390px;height:844px;overflow:hidden;position:relative;border-radius:34px;border:1px solid #34343c;display:flex;flex-direction:column;background:var(--surface);color:var(--on-surface);font-size:var(--fs-body);letter-spacing:var(--ls-body)}
+.sb{height:var(--safe-top);flex:0 0 var(--safe-top);display:flex;align-items:flex-end;justify-content:space-between;padding:0 26px var(--sp-2);font-size:var(--fs-caption);font-weight:var(--fw-bold)}
+.hi{position:absolute;bottom:9px;left:50%;transform:translateX(-50%);width:134px;height:5px;border-radius:var(--r-full);opacity:.25;background:var(--on-surface)}
+.body{flex:1;overflow:hidden;display:flex;flex-direction:column}
+.scroll{flex:1;overflow:hidden}
+
+/* ---- 타이포 유틸 ---- */
+.t-display{font-family:var(--font-display);font-size:var(--fs-display);font-weight:800;line-height:var(--lh-display);letter-spacing:var(--ls-display)}
+.t-title{font-family:var(--font-display);font-size:var(--fs-title);font-weight:var(--fw-bold);line-height:var(--lh-title);letter-spacing:var(--ls-title)}
+.t-bodylg{font-size:var(--fs-body-lg);line-height:var(--lh-body)}
+.t-body{font-size:var(--fs-body);line-height:var(--lh-body)}
+.t-cap{font-size:var(--fs-caption);line-height:var(--lh-body);letter-spacing:var(--ls-caption)}
+.t-label{font-size:var(--fs-caption);font-weight:var(--fw-bold);line-height:var(--lh-body);letter-spacing:0}
+.dim{color:var(--on-surface-variant)}
+.hot{color:var(--primary)}
+.bold{font-weight:var(--fw-bold)}
+.strong{font-weight:var(--fw-bold);color:var(--on-surface)}
+.t-hero{font-family:var(--font-display);font-size:var(--fs-hero);font-weight:800;line-height:var(--lh-hero);letter-spacing:var(--ls-display)}
+.center{text-align:center}
+.cta--quiet{border-color:var(--outline);color:var(--on-surface-variant)}
+.row-lead{display:flex;align-items:center;gap:var(--sp-3)}
+
+/* ---- appbar ---- */
+.appbar{padding:var(--sp-2) var(--sp-5) var(--sp-4);display:flex;align-items:flex-start;justify-content:space-between;gap:var(--sp-3)}
+.appbar--ctx{align-items:center;background:var(--surface-container);border-bottom:1px solid var(--outline);padding:var(--sp-3) var(--sp-5)}
+.appbar--center{display:block;text-align:center}
+
+/* ---- 리스트 행 (list-row) — 2줄 72dp 상한 [ref-04] ---- */
+.sect{font-size:var(--fs-caption);font-weight:var(--fw-bold);color:var(--on-surface-variant);padding:var(--sp-4) var(--sp-5) var(--sp-2);letter-spacing:0}
+.sect em{font-style:normal;color:var(--on-surface-muted)}
+.row{background:var(--surface-container);border-top:1px solid var(--outline);padding:var(--sp-3) var(--sp-4) var(--sp-3) var(--sp-5);display:flex;gap:var(--sp-3);align-items:center;min-height:72px}
+.row:last-of-type{border-bottom:1px solid var(--outline)}
+.row--compact{min-height:64px;padding-left:var(--sp-5);padding-right:var(--sp-5)}
+.rt{flex:1;min-width:0}
+.r1{font-size:var(--fs-body);font-weight:600;display:flex;align-items:center;gap:var(--sp-2);flex-wrap:wrap}
+.r2{font-size:var(--fs-caption);color:var(--on-surface-variant);margin-top:2px;letter-spacing:var(--ls-caption);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.lead{flex:0 0 var(--sp-2);width:var(--sp-2);height:var(--sp-2);border-radius:var(--r-full);background:var(--on-surface-muted)}
+.lead--alert{background:var(--primary)}
+.datecol{flex:0 0 84px;font-size:var(--fs-caption);font-weight:var(--fw-bold);color:var(--on-surface-variant)}
+.num{font-size:var(--fs-title);font-weight:800;font-variant-numeric:tabular-nums}
+.num--zero{color:var(--on-surface-muted)}
+
+/* ---- 버튼 ---- */
+.btn{flex:0 0 auto;min-height:var(--touch);display:flex;align-items:center;justify-content:center;padding:0 var(--sp-3);border:1px solid var(--outline-strong);border-radius:var(--r-sm);font-size:var(--fs-caption);font-weight:var(--fw-bold);background:var(--surface-container);color:var(--on-surface)}
+.btn--primary{background:var(--primary);border-color:var(--primary);color:var(--on-primary)}
+.cta{min-height:var(--touch-lg);border-radius:var(--r-md);display:flex;align-items:center;justify-content:center;font-size:var(--fs-body-lg);font-weight:var(--fw-bold);background:var(--primary);color:var(--on-primary);border:1px solid var(--primary)}
+.cta--ghost{background:var(--surface-container);color:var(--on-surface);border-color:var(--outline-strong)}
+.cta--pill{border-radius:var(--r-full)}
+
+/* ---- 배지 / 칩 ---- */
+.badge{font-size:var(--fs-caption);font-weight:var(--fw-bold);color:var(--on-surface-variant);background:var(--surface);border:1px solid var(--outline);border-radius:var(--r-sm);padding:1px var(--sp-1);letter-spacing:0}
+.badge--alert{color:var(--primary);background:var(--primary-container);border-color:var(--outline-primary)}
+.chip{font-size:var(--fs-caption);font-weight:600;background:var(--primary-container);color:var(--primary);border-radius:var(--r-full);padding:var(--sp-2) var(--sp-3)}
+.chip--ghost{background:transparent;border:1px dashed var(--outline-strong);color:var(--on-surface-variant)}
+.pill{min-height:var(--touch);display:flex;align-items:center;gap:var(--sp-1);background:var(--primary-container);color:var(--primary);border:1px solid var(--outline-primary);border-radius:var(--r-sm);padding:var(--sp-2) var(--sp-3);font-size:var(--fs-caption);font-weight:var(--fw-bold)}
+.cb{width:var(--sp-6);height:var(--sp-6);flex:0 0 var(--sp-6);border-radius:var(--r-sm);border:2px solid var(--outline-strong)}
+.cb--on{background:var(--primary);border-color:var(--primary)}
+
+/* ---- 알림 바 ---- */
+.alertbar{background:var(--primary-container);color:var(--primary);font-size:var(--fs-caption);font-weight:var(--fw-bold);padding:var(--sp-2) var(--sp-5);border-top:1px solid var(--outline-primary);border-bottom:1px solid var(--outline-primary);letter-spacing:0}
+.note{margin:var(--sp-4) var(--sp-5) 0;padding:var(--sp-3);background:var(--primary-container);border:1px solid var(--outline-primary);border-radius:var(--r-md);font-size:var(--fs-caption);color:var(--primary);line-height:var(--lh-body)}
+
+/* ---- 하단 영역 ---- */
+.bottombar{background:var(--surface-container);border-top:1px solid var(--outline);padding:var(--sp-3) var(--sp-5) var(--safe-bottom);display:flex;flex-direction:column;gap:var(--sp-2)}
+.bottombar--row{flex-direction:row;gap:var(--sp-2)}
+.bottombar--row>*{flex:1}
+.bottombar--row>.cta--ghost{flex:0 0 auto;padding:0 var(--sp-4)}
+.tabbar{flex:0 0 83px;display:flex;padding-bottom:20px;background:var(--surface-container);border-top:1px solid var(--outline);color:var(--on-surface-muted)}
+.tabbar div{flex:1;display:flex;flex-direction:column;align-items:center;padding-top:9px;gap:var(--sp-1);font-size:10px;min-height:var(--touch)}
+.tabbar .ico{width:22px;height:22px;border-radius:var(--r-sm);border:1.6px solid currentColor;opacity:.5}
+.tabbar .on{color:var(--primary);font-weight:var(--fw-bold)}
+.tabbar .on .ico{opacity:1}
+
+/* ---- 캘린더 ---- */
+.cal{background:var(--surface-container);border-top:1px solid var(--outline);border-bottom:1px solid var(--outline);padding:var(--sp-3) 14px var(--sp-4)}
+.calhead,.calgrid{display:grid;grid-template-columns:repeat(7,1fr);text-align:center}
+.calhead{font-size:var(--fs-caption);color:var(--on-surface-muted);padding-bottom:var(--sp-2)}
+.calgrid{font-size:var(--fs-body);row-gap:var(--sp-3)}
+.calgrid s{text-decoration:none;color:var(--on-surface-muted)}
+.calgrid u{text-decoration:none;font-weight:var(--fw-bold)}
+.calgrid u i{display:block;font-style:normal;font-size:9px;line-height:1;color:var(--on-surface-variant)}
+.calgrid .clash{color:var(--primary)}
+.calgrid .clash i{color:var(--primary)}
+
+/* ---- 2안 전용 ---- */
+.hero{text-align:center;padding:var(--sp-3) var(--sp-5) var(--sp-4)}
+.decor{font-size:var(--fs-body);color:var(--decor);letter-spacing:5px;margin-bottom:var(--sp-1)}
+.bigd{font-family:var(--font-display);font-size:var(--fs-hero);font-weight:800;letter-spacing:var(--ls-display);line-height:var(--lh-hero);margin:var(--sp-2) 0 var(--sp-1);color:var(--primary)}
+.gaugewrap{padding:0 var(--sp-5) var(--sp-4)}
+.gaugetop{display:flex;justify-content:space-between;font-size:var(--fs-caption);color:var(--on-surface-variant);margin-bottom:var(--sp-2)}
+.gauge{height:var(--sp-2);border-radius:var(--r-full);background:var(--outline);overflow:hidden}
+.gauge i{display:block;height:100%;background:var(--decor)}
+.tabs{display:flex;gap:var(--sp-2);padding:0 var(--sp-5) var(--sp-3);overflow:hidden}
+.tabs span{font-size:var(--fs-caption);padding:var(--sp-2) var(--sp-3);border-radius:var(--r-full);background:var(--surface-container);border:1px solid var(--outline);color:var(--on-surface-variant);white-space:nowrap;min-height:var(--touch);display:flex;align-items:center}
+.tabs .on{background:var(--primary);border-color:var(--primary);color:var(--on-primary);font-weight:var(--fw-bold)}
+.statgrid{display:grid;grid-template-columns:1fr 1fr;gap:var(--sp-3);padding:0 var(--sp-5) var(--sp-4)}
+.stat{background:var(--surface-container);border:1px solid var(--outline);border-radius:var(--r-md);padding:var(--sp-3);text-align:center}
+.stat b{font-family:var(--font-display);font-size:var(--fs-display);font-weight:800;color:var(--primary);display:block}
+.card{background:var(--surface-container);border:1px solid var(--outline);border-radius:var(--r-md);margin:0 var(--sp-5) var(--sp-3);padding:var(--sp-3) var(--sp-4)}
+.cardtop{display:flex;justify-content:space-between;align-items:center;gap:var(--sp-2)}
+.dots{display:flex;gap:var(--sp-1);margin-top:var(--sp-2)}
+.dots i{width:9px;height:9px;border-radius:var(--r-full);background:var(--outline)}
+.dots i.f{background:var(--decor)}
+.field{background:var(--surface-container);border:1px solid var(--outline);border-radius:var(--r-md);padding:var(--sp-3) var(--sp-4);min-height:var(--touch-lg);display:flex;align-items:center;flex-wrap:wrap;gap:var(--sp-2)}
+.seg{display:flex;gap:var(--sp-2)}
+.seg span{flex:1;min-height:var(--touch);border-radius:var(--r-md);background:var(--surface-container);border:1px solid var(--outline);display:flex;align-items:center;justify-content:center;font-size:var(--fs-body);color:var(--on-surface-variant)}
+.seg .on{background:var(--primary);border-color:var(--primary);color:var(--on-primary);font-weight:var(--fw-bold)}
+.pad{padding:0 var(--sp-5)}
+.gap{margin-top:var(--sp-4)}
+
+/* ---- 3안 전용 ---- */
+.micro{font-size:var(--fs-caption);color:var(--on-surface-variant);letter-spacing:1px;font-weight:var(--fw-bold);padding:var(--sp-2) var(--sp-6) 0;display:flex;justify-content:space-between}
+.stack{position:relative;margin:var(--sp-2) var(--sp-5) 0;height:410px}
+.sc{position:absolute;left:0;right:0;background:var(--surface-container);border:1px solid var(--outline);border-radius:var(--r-lg)}
+.sc.b2{top:22px;left:14px;right:14px;height:364px;opacity:.45}
+.sc.b1{top:11px;left:7px;right:7px;height:376px;opacity:.7}
+.sc.top{top:0;height:388px;padding:var(--sp-6);display:flex;flex-direction:column;border-color:var(--outline-strong)}
+.acts{margin-top:auto;display:flex;flex-direction:column;gap:var(--sp-2)}
+.rule{height:1px;background:var(--outline);margin:var(--sp-4) 0}
+.dotrow{display:flex;gap:var(--sp-2);justify-content:center;padding-top:var(--sp-4)}
+.dotrow i{width:6px;height:6px;border-radius:var(--r-full);background:var(--outline)}
+.dotrow i.on{background:var(--on-surface);width:20px;border-radius:var(--r-sm)}
+.tl{padding:0 var(--sp-6)}
+.pad-note{padding:var(--sp-4) var(--sp-6) 0}
+.tlrow{display:flex;gap:var(--sp-4);padding:var(--sp-4) 0;border-top:1px solid var(--outline)}
+.tlrow.clash{border-left:3px solid var(--on-surface);padding-left:var(--sp-3);margin-left:calc(-1 * var(--sp-3))}
+.tld{flex:0 0 52px;font-size:var(--fs-caption);font-weight:var(--fw-bold);color:var(--on-surface-variant)}
+.bigrow{display:flex;align-items:flex-end;gap:var(--sp-4);padding:var(--sp-4) 0;border-bottom:1px solid var(--outline)}
+.bignum{font-size:var(--fs-numeral,44px);font-weight:800;letter-spacing:-2px;line-height:1;font-variant-numeric:tabular-nums}
+.tagrow{display:flex;gap:var(--sp-2);flex-wrap:wrap;margin-top:var(--sp-3)}
+.tag-o{font-size:var(--fs-body);font-weight:var(--fw-bold);border:1px solid var(--on-surface);border-radius:var(--r-sm);padding:var(--sp-3);min-height:var(--touch);display:flex;align-items:center}
+.tag-o.g2{border-color:var(--outline-strong)}
+.tag-o.g{border-style:dashed;border-color:var(--outline-strong);color:var(--on-surface-variant);font-weight:var(--fw-normal)}
+</style>
+</head>
+<body>
+
+<div class="board-head">
+  <h1>청첩장모임 스케줄러 — 목업 3안 <span style="font-size:14px;font-weight:400;color:#787370">· 토큰 기반 재작성</span></h1>
+  <div class="sub">B-3.5 목업 보드 · 하나를 고르시거나 부분 채택("1안인데 편성은 3안처럼")을 말씀해주세요</div>
+
+  <div class="notice">
+    <b>이번 목업은 디자인 시스템 위에 올렸습니다.</b>
+    타이포·간격·모서리·터치타깃 <b>구조는 3안이 공유</b>하고, <b>값만 테마가 갈아끼웁니다</b>.
+    각 열 상단의 <code>토큰</code> 패널이 그 안의 시스템입니다.
+    앞선 버전은 글자 크기 24종 · 모서리 14종 · 인라인 스타일 153개였는데, 지금은
+    <b>크기 5종 · 모서리 4종 · 간격 6종 · 인라인 스타일 0</b>입니다.
+  </div>
+
+  <div class="notice">
+    <b>대비율을 토큰 단계에서 계산해 넣었습니다.</b>
+    앞 버전 2안은 핑크 <code>#D98A94</code> 위에 흰 글자를 얹어 대비 <b>2.62:1</b>이었습니다 —
+    <code>surface.low-contrast-body</code>(strong, 오버라이드 불가) 위반이었고, 육안 검사로는 못 잡았습니다.
+    지금은 텍스트가 얹히는 색을 <code>#A34A58</code>(5.71:1)로 바꾸고,
+    <code>#D98A94</code>는 <b>장식 전용</b>으로 강등해 토큰 주석에 못박았습니다.
+    각 테마의 <code>--on-surface-muted</code>도 <b>비텍스트 전용</b>입니다(2.4:1대).
+  </div>
+
+  <div class="notice">
+    <b>색·서체는 여전히 이 안의 방향을 보여주는 값입니다</b> (<code>MB-04</code>).
+    다만 이번엔 근거가 붙었습니다 — warm 뉴트럴은 Tailwind stone 실측[<code>ref-12</code>],
+    한글 본문 17px·150%·자간 −0.3px는 KRDS + 네이버 타이포 연구[<code>ref-11</code>·<code>ref-15</code>],
+    터치 타깃 48px는 material-components-android[<code>ref-07</code>]에서 왔습니다.
+  </div>
+
+  <div class="howto">
+    <b style="color:#e8e6e3">고르실 때 봐주시면 좋은 것</b>
+    <ul>
+      <li><b>미배정 12명</b>이 각 안에서 어디에 있는가 — 누락이 최대 실패 비용인데 이 표현만 레퍼런스 근거를 못 찾아 저희가 발명했습니다</li>
+      <li><b>박민서</b>(어디 넣을지 애매한 사람)를 강제 배정하는가, 보류로 남기는가</li>
+      <li><b>1안 홈의 점 3개가 전부 같은 색</b>입니다 — 마감 임박·무응답·충돌. 교차 비평에서 두 관점이 여기서 갈렸습니다(빠르다 vs 종류가 안 보인다)</li>
+    </ul>
+  </div>
+</div>
+
+<div class="cols">
+
+<!-- ==================== 안 1 ==================== -->
+<div class="col c1">
+  <div class="col-head">
+    <span class="tag">1. 추천안</span>
+    <h2>행동 큐 위에 얹은 일정</h2>
+    <p>홈이 "전부 보여주기"가 아니라 "놓친 것 지목하기"다. 정서는 딱 한 지점(액센트 1색)에만 허용한다.</p>
+    <table class="axes">
+      <tr><td>축1 홈</td><td>2층 — 상단 <b>행동 큐</b>(비면 섹션이 사라짐) + 하단 시간순. D-day 최상단 고정 <span style="color:#78737a">[ref-01·02·05]</span></td></tr>
+      <tr><td>축2 편성</td><td><b>사람에서 시작</b> · 상시 체크박스. 개수는 위, 실행은 아래. <b>액션 후 선택 유지</b> <span style="color:#78737a">[ref-06·07·08]</span></td></tr>
+      <tr><td>축3 무드</td><td>정서 허용 <b>1개</b> — warm 뉴트럴 5단계 + 액센트 1색(상태 전용) <span style="color:#78737a">[ref-12·13]</span></td></tr>
+    </table>
+    <div class="tokens t-rec">
+      <h3>디자인 시스템</h3>
+      <div class="swatches">
+        <span class="sw" data-n="surface" style="background:#FAFAF9"></span>
+        <span class="sw" data-n="card" style="background:#FFFFFF"></span>
+        <span class="sw" data-n="outline" style="background:#E7E5E4"></span>
+        <span class="sw" data-n="muted⚠" style="background:#A8A29E"></span>
+        <span class="sw" data-n="variant" style="background:#78716C"></span>
+        <span class="sw" data-n="on-surf" style="background:#1C1917"></span>
+        <span class="sw" data-n="primary" style="background:#B0442A"></span>
+      </div>
+      <div class="tkrow"><span>서체</span><b>Pretendard</b> · 세리프 없음</div>
+      <div class="tkrow"><span>크기</span><b>30 / 19 / 17 / 15 / 13</b> — 5종</div>
+      <div class="tkrow"><span>행간</span><b>1.5 단일</b> (display 1.15)</div>
+      <div class="tkrow"><span>자간</span><b>−0.3px</b> 본문 (한글)</div>
+      <div class="tkrow"><span>weight</span><b>400 / 700</b> — 2종</div>
+      <div class="tkrow"><span>간격</span><b>4 · 8 · 12 · 16 · 20 · 24 · 32</b></div>
+      <div class="tkrow"><span>모서리</span><b>6 / 10 / 16 / full</b> — 4종</div>
+      <div class="tkrow"><span>터치</span><b>48px</b> 최소 · CTA 52px</div>
+      <div class="tkrow"><span>대비</span>본문 <b>16.7:1</b> · 보조 <b>4.59:1</b> · 액센트 <b>5.43:1</b></div>
+    </div>
+    <div class="risk"><b>이 안이 틀렸다면</b> — 사용자가 홈에서 "할 일"이 아니라 전체 목록을 먼저 찾는 경우다. 그러면 실패 모드가 행동 누락이 아니라 조회 실패였던 것이고 2안이 맞다.</div>
+  </div>
+
+  <div class="frames">
+
+  <div class="fwrap"><div class="flabel">① 홈</div>
+  <div class="phone t-rec">
+    <div class="sb"><span>9:41</span><span>100%</span></div>
+    <div class="body"><div class="scroll">
+      <div class="appbar">
+        <div><div class="t-display">D-70</div><div class="t-cap dim">11월 14일 토요일 · 소연 ♥ 민준</div></div>
+        <div class="pill">미배정 12명 ›</div>
+      </div>
+      <div class="sect">지금 할 일 <em>4</em></div>
+      <div class="row"><i class="lead lead--alert"></i><div class="rt">
+        <div class="r1">대학동기 A조</div><div class="r2"><b class="hot">오늘 21시 마감</b> · 4명 중 2명 응답</div></div>
+        <div class="btn btn--primary">확정</div></div>
+      <div class="row"><i class="lead lead--alert"></i><div class="rt">
+        <div class="r1">이모네</div><div class="r2"><b class="hot">5일째 무응답</b> · 3명 중 0명 응답</div></div>
+        <div class="btn">다시 보내기</div></div>
+      <div class="row"><i class="lead lead--alert"></i><div class="rt">
+        <div class="r1">9월 19일 토요일</div><div class="r2"><b class="hot">2건 겹침</b> · 대학동기 A조 · 회사 팀장님</div></div>
+        <div class="btn">날짜 바꾸기</div></div>
+      <div class="row"><i class="lead"></i><div class="rt">
+        <div class="r1">동아리 B조</div><div class="r2">4명 전원 9월 26일 가능 · 회신 완료</div></div>
+        <div class="btn btn--primary">확정</div></div>
+      <div class="sect">다가오는 모임 <em>3</em></div>
+      <div class="row row--compact"><div class="datecol">9.19 토<br>12:00</div><div class="rt">
+        <div class="r1">대학동기 A조 <span class="badge">신부</span></div><div class="r2">4명 · 확정 대기</div></div></div>
+      <div class="row row--compact"><div class="datecol">9.19 토<br>19:00</div><div class="rt">
+        <div class="r1">회사 팀장님 <span class="badge">신부</span></div><div class="r2">1:1 · 확정</div></div></div>
+      <div class="row row--compact"><div class="datecol">9.20 일<br>12:00</div><div class="rt">
+        <div class="r1">동네친구 <span class="badge">신랑</span></div><div class="r2">5명 · 확정</div></div></div>
+    </div>
+    <div class="tabbar"><div class="on"><i class="ico"></i>할일</div><div><i class="ico"></i>사람</div><div><i class="ico"></i>모임</div><div><i class="ico"></i>달력</div></div>
+    </div><div class="hi"></div>
+  </div></div>
+
+  <div class="fwrap"><div class="flabel">② 사람 — 골라서 묶기</div>
+  <div class="phone t-rec">
+    <div class="sb"><span>9:41</span><span>100%</span></div>
+    <div class="body"><div class="scroll">
+      <div class="appbar appbar--ctx">
+        <div class="row-lead">
+          <div class="t-title dim">✕</div>
+          <div><div class="t-bodylg bold">3명 선택</div><div class="t-cap dim">전체 58명 · 미배정 12명</div></div>
+        </div>
+        <div class="t-label hot">전체 선택</div>
+      </div>
+      <div class="sect">아직 안 묶인 사람 <em>12</em></div>
+      <div class="row"><i class="cb cb--on"></i><div class="rt"><div class="r1">김서준</div><div class="r2">대학 · 동아리</div></div></div>
+      <div class="row"><i class="cb cb--on"></i><div class="rt"><div class="r1">이지우</div><div class="r2">대학</div></div></div>
+      <div class="row"><i class="cb cb--on"></i><div class="rt">
+        <div class="r1">박민서 <span class="badge badge--alert">보류</span></div>
+        <div class="r2">대학 · 동네 — 어디 넣을지 정하지 않음</div></div></div>
+      <div class="row"><i class="cb"></i><div class="rt"><div class="r1">최예은</div><div class="r2">직장</div></div></div>
+      <div class="row"><i class="cb"></i><div class="rt"><div class="r1">정하윤</div><div class="r2">가족</div></div></div>
+      <div class="sect">이미 묶인 사람 <em>46</em></div>
+      <div class="row"><i class="cb"></i><div class="rt"><div class="r1">강도현</div><div class="r2">대학동기 A조 · 확정 대기</div></div></div>
+      <div class="row"><i class="cb"></i><div class="rt">
+        <div class="r1">윤소율 <span class="badge">2개 모임</span></div><div class="r2">직장 1팀 · 대학동기 B조</div></div></div>
+    </div>
+    <div class="bottombar">
+      <div class="t-cap dim bold">최근 모임에 추가</div>
+      <div class="tagrow">
+        <span class="tag-o g2">대학동기 A조</span>
+        <span class="tag-o g2">동아리 B조</span>
+      </div>
+      <div class="cta">새 모임으로 묶기 · 3명</div>
+    </div>
+    </div><div class="hi"></div>
+  </div></div>
+
+  <div class="fwrap"><div class="flabel">③ 모임 상세 — 회신 현황</div>
+  <div class="phone t-rec">
+    <div class="sb"><span>9:41</span><span>100%</span></div>
+    <div class="body"><div class="scroll">
+      <div class="appbar"><div>
+        <div class="t-cap dim">‹ 모임</div>
+        <div class="t-title gap">대학동기 A조</div>
+        <div class="t-cap dim">4명 · <span class="badge">신부</span></div>
+      </div></div>
+      <div class="alertbar">회신 마감까지 5시간 · 오늘 21:00</div>
+      <div class="sect">날짜별 응답 <em>2 / 4명</em></div>
+      <div class="row"><div class="rt"><div class="r1">9월 19일 토요일 저녁</div><div class="r2">김서준 · 이지우 가능</div></div><div class="num">2</div></div>
+      <div class="row"><div class="rt"><div class="r1">9월 20일 일요일 점심</div><div class="r2">이지우 가능</div></div><div class="num num--zero">1</div></div>
+      <div class="row"><div class="rt"><div class="r1">9월 26일 토요일 저녁</div><div class="r2">아직 아무도 없음</div></div><div class="num num--zero">0</div></div>
+      <div class="sect">아직 답 없는 사람 <em>2</em></div>
+      <div class="row"><i class="lead lead--alert"></i><div class="rt"><div class="r1">박민서</div><div class="r2">3일째 무응답</div></div><div class="btn">다시</div></div>
+      <div class="row"><i class="lead lead--alert"></i><div class="rt"><div class="r1">강도현</div><div class="r2">3일째 무응답</div></div><div class="btn">다시</div></div>
+      <div class="note"><b>9월 19일은 이미 «회사 팀장님» 모임이 있는 날입니다.</b> 저녁 시간이 겹칩니다.</div>
+    </div>
+    <div class="bottombar bottombar--row">
+      <div class="cta cta--ghost">기다리기</div>
+      <div class="cta">2명 응답으로 확정</div>
+    </div>
+    </div><div class="hi"></div>
+  </div></div>
+
+  <div class="fwrap"><div class="flabel">④ 통합 달력</div>
+  <div class="phone t-rec">
+    <div class="sb"><span>9:41</span><span>100%</span></div>
+    <div class="body"><div class="scroll">
+      <div class="appbar">
+        <div><div class="t-title">9월</div><div class="t-cap dim">확정 9건 · 조율 중 8건</div></div>
+        <div class="t-cap dim">● 신부 &nbsp;○ 신랑 &nbsp;<span class="hot">▲ 겹침</span></div>
+      </div>
+      <div class="cal">
+        <div class="calhead"><span>일</span><span>월</span><span>화</span><span>수</span><span>목</span><span>금</span><span>토</span></div>
+        <div class="calgrid">
+          <s>30</s><s>31</s><span>1</span><span>2</span><span>3</span><span>4</span><u>5</u>
+          <span>6</span><span>7</span><span>8</span><span>9</span><span>10</span><span>11</span><span>12</span>
+          <span>13</span><span>14</span><span>15</span><span>16</span><span>17</span><span>18</span>
+          <u class="clash">19<i>▲</i></u><u>20<i>○</i></u>
+          <span>21</span><span>22</span><span>23</span><span>24</span><span>25</span><u>26<i>●</i></u>
+          <span>27</span><span>28</span><span>29</span><span>30</span><s>1</s><s>2</s><s>3</s>
+        </div>
+      </div>
+      <div class="alertbar">9월 19일 토요일 — 2건이 같은 날입니다</div>
+      <div class="row row--compact"><div class="datecol">12:00</div><div class="rt">
+        <div class="r1">대학동기 A조 <span class="badge">신부</span></div><div class="r2">4명 · 확정 대기</div></div></div>
+      <div class="row row--compact"><div class="datecol">19:00</div><div class="rt">
+        <div class="r1">회사 팀장님 <span class="badge">신부</span></div><div class="r2">1:1 · 확정</div></div></div>
+      <div class="sect">그 밖의 9월</div>
+      <div class="row row--compact"><div class="datecol">9.20 일</div><div class="rt">
+        <div class="r1">동네친구 <span class="badge">신랑</span></div><div class="r2">5명 · 확정</div></div></div>
+      <div class="row row--compact"><div class="datecol">9.26 토</div><div class="rt">
+        <div class="r1">동아리 B조 <span class="badge">신부</span></div><div class="r2">4명 · 확정 대기</div></div></div>
+    </div>
+    <div class="tabbar"><div><i class="ico"></i>할일</div><div><i class="ico"></i>사람</div><div><i class="ico"></i>모임</div><div class="on"><i class="ico"></i>달력</div></div>
+    </div><div class="hi"></div>
+  </div></div>
+
+  </div>
+</div>
+
+<!-- ==================== 안 2 ==================== -->
+<div class="col c2">
+  <div class="col-head">
+    <span class="tag">2. 무난함</span>
+    <h2>결혼 준비 대시보드</h2>
+    <p>국내 웨딩 앱의 컨벤션을 그대로 따랐다. 사용자가 이 카테고리에서 이미 기대하는 형태다.</p>
+    <table class="axes">
+      <tr><td>축1 홈</td><td><b>진척률 대시보드</b> — 대형 D-day + 완료율 게이지 + 카테고리 탭 + 상태별 건수 <span style="color:#78737a">[ref-05 자도메인]</span></td></tr>
+      <tr><td>축2 편성</td><td><b>모임에서 시작</b> — 모임을 먼저 만들고 사람을 담는 폴더 모델</td></tr>
+      <tr><td>축3 무드</td><td>정서 허용 <b>다수</b> — 블러시 + 명조 제목 + 장식. 웨딩 카테고리 중앙값</td></tr>
+    </table>
+    <div class="tokens t-safe">
+      <h3>디자인 시스템</h3>
+      <div class="swatches">
+        <span class="sw" data-n="surface" style="background:#FDF7F6"></span>
+        <span class="sw" data-n="card" style="background:#FFFFFF"></span>
+        <span class="sw" data-n="outline" style="background:#F0E2DF"></span>
+        <span class="sw" data-n="decor⚠" style="background:#D98A94"></span>
+        <span class="sw" data-n="variant" style="background:#7D6663"></span>
+        <span class="sw" data-n="on-surf" style="background:#3D2F2C"></span>
+        <span class="sw" data-n="primary" style="background:#A34A58"></span>
+      </div>
+      <div class="tkrow"><span>서체</span><b>Pretendard + 나눔명조</b></div>
+      <div class="tkrow"><span>크기</span><b>52 / 30 / 19 / 17 / 15 / 13</b> — 6종</div>
+      <div class="tkrow"><span>행간</span>1.5 · display 1.05</div>
+      <div class="tkrow"><span>모서리</span>6 / 10 / 16 / <b>full(알약)</b></div>
+      <div class="tkrow"><span>터치</span><b>48px</b> 최소</div>
+      <div class="tkrow"><span>대비</span>본문 <b>12.1:1</b> · 보조 <b>5.01:1</b> · primary <b>5.39:1</b></div>
+      <div class="tkrow"><span>⚠ 제약</span><b>#D98A94는 장식 전용</b> — 텍스트·버튼 금지(2.47:1)</div>
+    </div>
+    <div class="risk"><b>이 안의 값어치</b> — 고르시면 "관습을 어긴 대가가 사용자에게 비용이었다"는 실측 데이터가 됩니다. 버리는 카드가 아닙니다.<br><br>
+    <b>약점</b> — 24건이 5~6개 상태에 흩어져 있을 때 "68% 완료"는 <b>다음 행동을 하나도 안 알려줍니다</b>. 미배정 12명과 9/19 충돌이 홈에서 안 보입니다.</div>
+  </div>
+
+  <div class="frames">
+
+  <div class="fwrap"><div class="flabel">① 홈</div>
+  <div class="phone t-safe">
+    <div class="sb"><span>9:41</span><span>100%</span></div>
+    <div class="body"><div class="scroll">
+      <div class="hero">
+        <div class="decor">♥ ♥ ♥</div>
+        <div class="t-title">소연 ♥ 민준</div>
+        <div class="bigd">D-70</div>
+        <div class="t-cap dim">2026년 11월 14일 토요일</div>
+      </div>
+      <div class="gaugewrap">
+        <div class="gaugetop"><span>청첩장모임 준비</span><span><b>68%</b> 완료</span></div>
+        <div class="gauge"><i style="width:68%"></i></div>
+      </div>
+      <div class="tabs"><span class="on">전체</span><span>대학</span><span>직장</span><span>가족</span><span>동네</span></div>
+      <div class="statgrid">
+        <div class="stat"><b>8</b><span class="t-cap dim">회신 대기</span></div>
+        <div class="stat"><b>3</b><span class="t-cap dim">회신 완료</span></div>
+        <div class="stat"><b>9</b><span class="t-cap dim">확정</span></div>
+        <div class="stat"><b>4</b><span class="t-cap dim">다녀옴</span></div>
+      </div>
+      <div class="sect">다가오는 모임</div>
+      <div class="card"><div class="cardtop"><span class="t-bodylg bold">대학동기 A조</span><span class="chip">신부</span></div>
+        <div class="t-cap dim">9월 19일 토요일 12:00 · 4명</div>
+        <div class="dots"><i class="f"></i><i class="f"></i><i></i><i></i></div></div>
+      <div class="card"><div class="cardtop"><span class="t-bodylg bold">회사 팀장님</span><span class="chip">신부</span></div>
+        <div class="t-cap dim">9월 19일 토요일 19:00 · 1명</div></div>
+      <div class="card"><div class="cardtop"><span class="t-bodylg bold">동네친구</span><span class="chip">신랑</span></div>
+        <div class="t-cap dim">9월 20일 일요일 12:00 · 5명</div></div>
+    </div>
+    <div class="tabbar"><div class="on"><i class="ico"></i>홈</div><div><i class="ico"></i>모임</div><div><i class="ico"></i>사람</div><div><i class="ico"></i>달력</div></div>
+    </div><div class="hi"></div>
+  </div></div>
+
+  <div class="fwrap"><div class="flabel">② 모임 만들기 — 만들고 담기</div>
+  <div class="phone t-safe">
+    <div class="sb"><span>9:41</span><span>100%</span></div>
+    <div class="body"><div class="scroll">
+      <div class="appbar"><div><div class="t-cap dim">‹ 모임</div><div class="t-title gap">새 모임 만들기</div></div></div>
+      <div class="pad">
+        <div class="t-cap dim">모임 이름</div>
+        <div class="field gap"><span class="t-bodylg">대학동기 A조</span></div>
+
+        <div class="t-cap dim gap">누가 나오나요? <b class="hot">3명</b></div>
+        <div class="field gap">
+          <span class="chip">김서준 ✕</span><span class="chip">이지우 ✕</span><span class="chip">박민서 ✕</span>
+          <span class="chip chip--ghost">+ 추가</span>
+        </div>
+
+        <div class="t-cap dim gap">누구 쪽 모임인가요?</div>
+        <div class="seg gap"><span class="on">신부</span><span>신랑</span><span>양가</span></div>
+
+        <div class="t-cap dim gap">아직 모임에 안 들어간 사람이 <b class="strong">12명</b> 있어요</div>
+      </div>
+    </div>
+    <div class="bottombar"><div class="cta cta--pill">다음 · 날짜 고르기</div></div>
+    </div><div class="hi"></div>
+  </div></div>
+
+  <div class="fwrap"><div class="flabel">③ 모임 상세 — 회신 현황</div>
+  <div class="phone t-safe">
+    <div class="sb"><span>9:41</span><span>100%</span></div>
+    <div class="body"><div class="scroll">
+      <div class="hero"><div class="decor">♥</div>
+        <div class="t-title">대학동기 A조</div>
+        <div class="t-cap dim">4명 · 신부 측</div></div>
+      <div class="gaugewrap">
+        <div class="gaugetop"><span>회신</span><span><b>2 / 4명</b></span></div>
+        <div class="gauge"><i style="width:50%"></i></div>
+      </div>
+      <div class="sect">누가 답했나요</div>
+      <div class="card"><div class="cardtop"><span class="t-bodylg bold">김서준</span><span class="chip">답변 완료</span></div>
+        <div class="t-cap dim">9/19 저녁 · 9/20 점심 가능</div></div>
+      <div class="card"><div class="cardtop"><span class="t-bodylg bold">이지우</span><span class="chip">답변 완료</span></div>
+        <div class="t-cap dim">9/19 저녁 가능</div></div>
+      <div class="card"><div class="cardtop"><span class="t-bodylg bold">박민서</span><span class="badge">기다리는 중</span></div>
+        <div class="t-cap dim">3일 전에 보냄</div></div>
+      <div class="card"><div class="cardtop"><span class="t-bodylg bold">강도현</span><span class="badge">기다리는 중</span></div>
+        <div class="t-cap dim">3일 전에 보냄</div></div>
+      <div class="t-cap dim pad">회신 마감 · 오늘 오후 9시</div>
+    </div>
+    <div class="bottombar bottombar--row">
+      <div class="cta cta--ghost cta--pill">재촉하기</div>
+      <div class="cta cta--pill">날짜 확정</div>
+    </div>
+    </div><div class="hi"></div>
+  </div></div>
+
+  <div class="fwrap"><div class="flabel">④ 통합 달력</div>
+  <div class="phone t-safe">
+    <div class="sb"><span>9:41</span><span>100%</span></div>
+    <div class="body"><div class="scroll">
+      <div class="appbar appbar--center">
+        <div class="t-title">2026년 9월</div><div class="t-cap dim">♥ 신부 · ♥ 신랑</div></div>
+      <div class="cal">
+        <div class="calhead"><span>일</span><span>월</span><span>화</span><span>수</span><span>목</span><span>금</span><span>토</span></div>
+        <div class="calgrid">
+          <s>30</s><s>31</s><span>1</span><span>2</span><span>3</span><span>4</span><u class="clash">5</u>
+          <span>6</span><span>7</span><span>8</span><span>9</span><span>10</span><span>11</span><span>12</span>
+          <span>13</span><span>14</span><span>15</span><span>16</span><span>17</span><span>18</span>
+          <u>19<i>♥♥</i></u><u>20<i>♥</i></u>
+          <span>21</span><span>22</span><span>23</span><span>24</span><span>25</span><u>26<i>♥</i></u>
+          <span>27</span><span>28</span><span>29</span><span>30</span><s>1</s><s>2</s><s>3</s>
+        </div>
+      </div>
+      <div class="sect">9월 19일 토요일</div>
+      <div class="card"><div class="cardtop"><span class="t-bodylg bold">대학동기 A조</span><span class="chip">신부</span></div>
+        <div class="t-cap dim">12:00 · 4명</div></div>
+      <div class="card"><div class="cardtop"><span class="t-bodylg bold">회사 팀장님</span><span class="chip">신부</span></div>
+        <div class="t-cap dim">19:00 · 1명</div></div>
+      <div class="sect">9월 20일 일요일</div>
+      <div class="card"><div class="cardtop"><span class="t-bodylg bold">동네친구</span><span class="chip">신랑</span></div>
+        <div class="t-cap dim">12:00 · 5명</div></div>
+    </div>
+    <div class="tabbar"><div><i class="ico"></i>홈</div><div><i class="ico"></i>모임</div><div><i class="ico"></i>사람</div><div class="on"><i class="ico"></i>달력</div></div>
+    </div><div class="hi"></div>
+  </div></div>
+
+  </div>
+</div>
+
+<!-- ==================== 안 3 ==================== -->
+<div class="col c3">
+  <div class="col-head">
+    <span class="tag">3. 도전 · 과감</span>
+    <h2>한 번에 한 건</h2>
+    <p>목록을 아예 없앴다. 홈은 "지금 결정할 것" 카드 한 장이고, 답하면 다음 장이 온다. 색을 전부 뺐다.</p>
+    <table class="axes">
+      <tr><td>축1 홈</td><td><b>카드 스택</b> — 리스트가 아니라 한 건씩. 훑는 게 아니라 처리하는 화면 <span style="color:#78737a">[ref-10 확장]</span></td></tr>
+      <tr><td>축2 편성</td><td><b>앱이 먼저 제안</b> · 애매한 사람은 <b>보류</b>가 정식 응답 <span style="color:#78737a">[ref-10]</span></td></tr>
+      <tr><td>축3 무드</td><td>정서 허용 <b>0개</b> — 액센트색 없음. 위계를 굵기·크기·여백으로만 <span style="color:#78737a">[ref-14]</span></td></tr>
+    </table>
+    <div class="tokens t-bold">
+      <h3>디자인 시스템</h3>
+      <div class="swatches">
+        <span class="sw" data-n="surface" style="background:#FFFFFF"></span>
+        <span class="sw" data-n="subtle" style="background:#FAFAFA"></span>
+        <span class="sw" data-n="outline" style="background:#E8E8E6"></span>
+        <span class="sw" data-n="muted⚠" style="background:#A5A5A0"></span>
+        <span class="sw" data-n="variant" style="background:#6E6E68"></span>
+        <span class="sw" data-n="on-surf" style="background:#0E0E0C"></span>
+      </div>
+      <div class="tkrow"><span>서체</span><b>Pretendard</b> 단일</div>
+      <div class="tkrow"><span>크기</span><b>44 / 30 / 19 / 17 / 15 / 13</b> — 6종</div>
+      <div class="tkrow"><span>모서리</span>6 / <b>13 / 20</b> / full — 크게</div>
+      <div class="tkrow"><span>액센트</span><b>없음</b> — primary가 본문색을 겸함</div>
+      <div class="tkrow"><span>터치</span><b>48px</b> · CTA 52px</div>
+      <div class="tkrow"><span>대비</span>본문 <b>19.3:1</b> · 보조 <b>5.13:1</b></div>
+      <div class="tkrow"><span>⚠ 대가</span>위험 신호를 <b>타이포로만</b> 구분</div>
+    </div>
+    <div class="risk"><b>근거</b> — 소싱에서 반복 관측: 정서적 도메인의 도구에서 "따뜻함"은 추가된 요소가 아니라 <b>덜어낸 결과</b>로 나타납니다(Nara, Linear의 "never decoratively").<br><br>
+    <b>위험</b> — 전체 조망을 포기합니다. "지금 몇 건이 어떤 상태인지"를 한눈에 볼 수 없고, PRD §4-6(진행 상태 구분)을 탭 하나로 미룹니다.</div>
+  </div>
+
+  <div class="frames">
+
+  <div class="fwrap"><div class="flabel">① 홈</div>
+  <div class="phone t-bold">
+    <div class="sb"><span>9:41</span><span>100%</span></div>
+    <div class="body"><div class="scroll">
+      <div class="micro"><span>D-70 · 11.14 토</span><span>미배정 12</span></div>
+      <div class="sect">지금 결정할 것 4건 중 1</div>
+      <div class="stack">
+        <div class="sc b2"></div><div class="sc b1"></div>
+        <div class="sc top">
+          <div class="t-label dim">오늘 21시 마감</div>
+          <div class="t-hero gap">대학동기 A조,<br>2명만 답했어요</div>
+          <div class="t-bodylg dim gap"><b class="strong">9월 19일 토요일 저녁</b>이 지금까지 가장 많습니다.<br>김서준 · 이지우 가능 / 박민서 · 강도현 무응답</div>
+          <div class="rule"></div>
+          <div class="t-bodylg dim">그날은 <b class="strong">«회사 팀장님»</b> 모임이 이미 있습니다.</div>
+          <div class="acts">
+            <div class="cta">9월 19일로 확정</div>
+            <div class="cta cta--ghost">다른 날 다시 묻기</div>
+            <div class="cta cta--ghost cta--quiet">나중에</div>
+          </div>
+        </div>
+      </div>
+      <div class="dotrow"><i class="on"></i><i></i><i></i><i></i></div>
+    </div>
+    <div class="tabbar"><div class="on"><i class="ico"></i>결정</div><div><i class="ico"></i>사람</div><div><i class="ico"></i>모임</div><div><i class="ico"></i>달력</div></div>
+    </div><div class="hi"></div>
+  </div></div>
+
+  <div class="fwrap"><div class="flabel">② 편성 — 앱이 먼저 묶어봄</div>
+  <div class="phone t-bold">
+    <div class="sb"><span>9:41</span><span>100%</span></div>
+    <div class="body"><div class="scroll">
+      <div class="micro"><span>58명 → 14개 제안</span><span>3 / 14</span></div>
+      <div class="sect">이렇게 묶어봤어요</div>
+      <div class="stack" style="height:396px">
+        <div class="sc b2"></div><div class="sc b1"></div>
+        <div class="sc top" style="height:374px">
+          <div class="t-label dim">같이 만나도 될까요</div>
+          <div class="t-hero gap">대학 · 동아리<br>5명</div>
+          <div class="t-bodylg dim gap">김서준 · 이지우 · 강도현 · 윤소율 · 박민서</div>
+          <div class="rule"></div>
+          <div class="t-body dim"><b class="strong">윤소율</b>은 «직장 1팀»에도 들어 있어요.<br><b class="strong">박민서</b>는 동네 친구이기도 합니다.</div>
+          <div class="acts">
+            <div class="cta">이대로 만들기</div>
+            <div class="cta cta--ghost">사람 고치기</div>
+            <div class="cta cta--ghost cta--quiet">아직 모르겠어요 · 보류</div>
+          </div>
+        </div>
+      </div>
+      <div class="t-body dim pad-note">
+        <b class="strong">보류한 사람은 사라지지 않습니다.</b><br>
+        «미배정 12명»에 그대로 남아, 0이 될 때까지 계속 보입니다.
+      </div>
+    </div>
+    <div class="tabbar"><div><i class="ico"></i>결정</div><div class="on"><i class="ico"></i>사람</div><div><i class="ico"></i>모임</div><div><i class="ico"></i>달력</div></div>
+    </div><div class="hi"></div>
+  </div></div>
+
+  <div class="fwrap"><div class="flabel">③ 모임 상세 — 회신 현황</div>
+  <div class="phone t-bold">
+    <div class="sb"><span>9:41</span><span>100%</span></div>
+    <div class="body"><div class="scroll">
+      <div class="micro"><span>‹ 모임</span><span>신부 · 4명</span></div>
+      <div class="pad gap">
+        <div class="t-display">대학동기 A조</div>
+        <div class="t-bodylg dim gap">회신 마감까지 <b class="strong">5시간</b> · 오늘 21:00</div>
+      </div>
+      <div class="pad gap">
+        <div class="bigrow"><div class="bignum">2</div>
+          <div><div class="t-bodylg bold">9월 19일 토요일 저녁</div><div class="t-cap dim">김서준 · 이지우</div></div></div>
+        <div class="bigrow"><div class="bignum dim">1</div>
+          <div><div class="t-bodylg bold dim">9월 20일 일요일 점심</div><div class="t-cap dim">이지우</div></div></div>
+        <div class="bigrow"><div class="bignum dim">0</div>
+          <div><div class="t-bodylg bold dim">9월 26일 토요일 저녁</div><div class="t-cap dim">아직 아무도</div></div></div>
+      </div>
+      <div class="pad gap">
+        <div class="t-label dim">답이 없는 사람</div>
+        <div class="tagrow"><span class="tag-o">박민서</span><span class="tag-o">강도현</span><span class="tag-o g">다시 보내기</span></div>
+      </div>
+    </div>
+    <div class="bottombar">
+      <div class="t-cap dim">19일은 «회사 팀장님»과 같은 날입니다</div>
+      <div class="cta">2명 응답으로 확정</div>
+    </div>
+    </div><div class="hi"></div>
+  </div></div>
+
+  <div class="fwrap"><div class="flabel">④ 통합 달력 — 세로 타임라인</div>
+  <div class="phone t-bold">
+    <div class="sb"><span>9:41</span><span>100%</span></div>
+    <div class="body"><div class="scroll">
+      <div class="micro"><span>9월 — 11월</span><span>확정 9 · 조율 8</span></div>
+      <div class="pad gap"><div class="t-display">앞으로 17건</div></div>
+      <div class="tl gap">
+        <div class="tlrow"><div class="tld">9.12<br><span class="t-cap dim">토</span></div>
+          <div><div class="t-bodylg bold">직장 1팀</div><div class="t-cap dim">4명 · 신부 · 확정</div></div></div>
+        <div class="tlrow clash"><div class="tld">9.19<br><span class="t-cap dim">토</span></div>
+          <div><div class="t-bodylg bold">대학동기 A조 <span class="badge">겹침</span></div><div class="t-cap dim">12:00 · 4명 · 신부 · 확정 대기</div>
+          <div class="t-bodylg bold gap">회사 팀장님</div><div class="t-cap dim">19:00 · 1:1 · 신부 · 확정</div></div></div>
+        <div class="tlrow"><div class="tld">9.20<br><span class="t-cap dim">일</span></div>
+          <div><div class="t-bodylg bold">동네친구</div><div class="t-cap dim">12:00 · 5명 · 신랑 · 확정</div></div></div>
+        <div class="tlrow"><div class="tld">9.26<br><span class="t-cap dim">토</span></div>
+          <div><div class="t-bodylg bold">동아리 B조</div><div class="t-cap dim">4명 · 신부 · 확정 대기</div></div></div>
+        <div class="tlrow"><div class="tld">10.3<br><span class="t-cap dim">토</span></div>
+          <div><div class="t-bodylg bold">상견례</div><div class="t-cap dim">18:00 · 양가 함께 · 확정</div></div></div>
+        <div class="tlrow"><div class="tld">10.10<br><span class="t-cap dim">토</span></div>
+          <div><div class="t-bodylg bold">헬스장 크루</div><div class="t-cap dim">5명 중 3명 응답 · 신랑 · 마감 D-3</div></div></div>
+      </div>
+    </div>
+    <div class="tabbar"><div><i class="ico"></i>결정</div><div><i class="ico"></i>사람</div><div><i class="ico"></i>모임</div><div class="on"><i class="ico"></i>달력</div></div>
+    </div><div class="hi"></div>
+  </div></div>
+
+  </div>
+</div>
+
+</div>
+</body>
+</html>
