@@ -47,7 +47,7 @@ description: 취향 시안(taste), 따라가 보기 투어(flow), 규칙 미리�
 - **추천 먼저.** 단위마다 프롬프트 또는 자기 판단으로 추천 1개(taste: 시안 A/B/C 중 하나, reference: 앱별 가져올 번호 2~3개, rules: 그대로)를 정해 "추천" 리본 + 이유 한 줄. reference는 추천 앱 3개만 펼치고 나머지는 "나머지 n개 보기"로 접는다.
 - **"다르게 할래요" 버튼은 없다.** taste: 추천은 텍스트 한 줄("추천: B — 이유"), 선택은 폰 화면 클릭(눌린 화면 accent 테두리, 즉시 저장; text는 추천이면 "추천대로" 아니면 "직접 선택"). A/B/C 버튼·"추천대로" 버튼·세부 의견 칸 없음. flow: "괜찮아요 👍" 즉시 저장 + 🤔 때만 번호·이유. reference: 추천 3개 펼침, "추천대로 할게요" + 가져올/싫은 번호 칩·이유 항상 표시. rules: 페이지 상단에 "전체 추천대로 할게요"(섹션 전부 reaction:"good" 저장) 하나만. 섹션별 👍 버튼은 없고, 섹션에는 어색한 부품 칩·이유·저장만. flow는 **"괜찮아요 👍 / 어색해요 🤔"** 두 개, 🤔일 때만 펼침. 👎는 없다.
 - 펼쳤을 때만: 가장 좋은/싫은(taste) 또는 가져올/싫은(reference) 선택 + 영역 번호 칩 토글(칩 라벨 = "③ 하단 버튼") + 자유 입력
-- 자유 입력 textarea. 저장 버튼은 **비교 단위 왼쪽 세로 띠(폭 132px, sticky)에 가로로 넓게(높이 40)** — 띠에는 단위 순번·이전/다음(있으면)·저장이 가로 배치로 들어간다 → "저장됨 ✓". 헤더 카운터 "의견 남긴 항목 n개". 페이지 끝 "전체 의견" 1개.
+- 자유 입력 textarea. 저장 버튼은 **비교 단위 왼쪽 세로 띠(폭 132px, sticky)에 가로로 넓게(높이 40)** — 띠에는 단위 순번·이전/다음(있으면)·저장이 가로 배치로 들어간다 → "저장됨 ✓". 헤더 카운터 "의견 남긴 항목 n개". **"전체 의견" 패널은 넣지 않는다**(어느 KIND에도).
 
 저장: Artifact `db` — 배포 시 `capabilities: {db: {}}`. 코드는 `const db = await claude.use("db")` (첫 실행 중 `window.claude.db` 읽기 금지, null이면 localStorage 폴백 + "이 환경에서는 브라우저에만 저장돼요"). 문서 경로 `feedback/<unit>-<n>` (flow: `scene-3`, taste: `axis-1`, rules: `section-4`, reference: `app-doodle`), 전체 `feedback/overall`. 본문 `{unit, n, screen|label, reaction, marks:["③"], markNames:["하단 버튼"], best?, worst?, text, updatedAt}`. `set()` 통째 저장, 열 때 `collection("feedback").get()` 1회 복원. 에러는 `e.code` 분기 + 토스트.
 
