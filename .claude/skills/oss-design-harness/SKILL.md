@@ -29,6 +29,7 @@ design/
   design-rules.md   # 확정된 토큰·컴포넌트·레이아웃 규칙 (figma-builder의 유일한 입력)
   references/       # 스킬이 수집한 경쟁 앱 스크린샷 (내부 비교용)
   icons.md          # lucide 아이콘 허용 목록: 액션·상태 → 아이콘 이름 1:1
+  screens.md        # 화면별 컴포넌트 구성표 (최종 미리보기에서 확정, figma-builder 화면 STAGE의 입력)
   probes/           # 보여준 HTML 시안·로우파이 사본
   build-log.md      # figma-builder / design-auditor 진행 기록
 ```
@@ -77,6 +78,17 @@ design/
 - 규칙 미리보기는 `probe-renderer`에 `KIND=rules OUT=design/probes/rules-preview.html`로 위임한다. 버튼 3사이즈 × 5상태, 아이콘 허용 목록 전체, 썸네일 그리드(선택 상태 포함), 바텀시트·다이얼로그, 탭바·상단 앱바, 타이포 역할표, 빈 상태·로딩 상태가 390 폭 프레임 안에 번호 라벨과 함께 담긴다. 섹션마다 의견 패널이 있어 사용자는 어색한 번호를 눌러 저장하고, 스킬이 `feedback/section-<n>`을 읽는다. "다르게"가 붙은 섹션에만 국소 질문("눌렀을 때 색이 너무 어두운가요, 너무 약한가요?")을 허용한다.
 - 확정 후 design-rules.md 맨 위에 `status: confirmed`와 날짜를 적는다. figma-builder는 이 값이 없으면 시작하지 않는다.
 
+## 4.5단계 최종 미리보기 (Figma로 만들기 전 마지막 게이트)
+
+규칙이 confirmed 되면 **figma-builder를 부르기 전에** 허브 마지막 탭 "최종 미리보기"를 만든다. 전문은 `references/final-preview.md`.
+
+- `check_phase.py --phase rules` 통과 → brief §1 화면 목록으로 `design/screens.md` 초안(화면별 컴포넌트 구성표, 템플릿 `templates/screens.md`)을 만든다 → `probe-renderer`에 `KIND=preview OUT=design/probes/final-preview.html`로 위임 → hub.json 마지막 탭 `{"file":"final-preview.html","title":"최종 미리보기","prefix":"screen-","stage":"5단계 직전"}` 추가 → `build_hub.py` → 같은 URL로 재배포.
+- 사용자가 "다 봤어"라고 하면 `read_db`로 `feedback/screen-*`와 `feedback/preview-go`를 읽는다.
+  - `preview-go` 있음 + 모든 화면 `ok` → screens.md를 확정본으로 저장하고 5단계 시작.
+  - `fix`인 화면 → `remove`·`swap`을 screens.md에 반영하고 **그 화면만** 다시 그려 재배포. 2회까지. 3회째면 방향 오류로 보고 3단계 해당 축을 재확인한다.
+  - 의견 0건 → 터미널로 "화면 n개 중 고칠 것이 있나요? (없음 / 번호)" 1회.
+- 이 탭에서는 규칙 값이나 화면 추가를 바꾸지 않는다. 규칙은 규칙 미리보기 탭, 화면 추가는 1단계 구조 탭으로 돌아간다.
+
 ## 페이즈 게이트 (스크립트 검증)
 
 각 단계를 "끝났다"고 선언하기 전에 반드시 스크립트를 돌린다. LLM의 자기 보고를 믿지 않는다. 스크립트는 이 레포의 `scripts/`에 있다. 스킬만 복사된 환경이면 `scripts/`도 함께 복사한다.
@@ -88,7 +100,8 @@ design/
 | 시안 페이지 배포 직전 | `python3 scripts/check_phase.py --phase probes` → `python3 scripts/build_hub.py` | HTML 수정 후 재검 (의견 패널·db 코드·장면 구조·상태 세그먼트 검사). 허브 빌드가 실패하면 배포하지 않는다 |
 | 3단계 취향 끝 | `python3 scripts/check_phase.py --phase taste` | 미확정 축 재질문 또는 가정 로그 추가 |
 | 4단계 규칙 끝 | `python3 scripts/check_phase.py --phase rules` | 통과 전에는 `status: confirmed`를 쓰지 않는다 |
-| figma-builder STAGE 끝 | `python3 scripts/figma_audit.py --snapshot design/figma-snapshot.json --rules design/design-rules.md --brief design/brief.md --icons design/icons.md --fix-list design/fix-list.md` | fix-list.md를 `STAGE=fix`에 넘긴다 |
+| 최종 미리보기 끝 | `read_db`에 `feedback/preview-go` 존재 + 모든 `screen-*`가 ok | 없으면 figma-builder를 부르지 않는다 |
+| figma-builder STAGE 끝 | `python3 scripts/figma_audit.py --snapshot design/figma-snapshot.json --rules design/design-rules.md --brief design/brief.md --icons design/icons.md --screens design/screens.md --fix-list design/fix-list.md` | fix-list.md를 `STAGE=fix`에 넘긴다 |
 
 종료 코드 0이 아니면 그 단계는 끝나지 않은 것이다. 출력의 `[FAIL]` 줄을 사용자에게 그대로 보여준다.
 
@@ -96,10 +109,10 @@ design/
 
 ```
 Agent(subagent_type: "figma-builder",
-      prompt: "design/design-rules.md, design/brief.md를 읽고 STAGE=tokens 실행. 결과를 design/build-log.md에 기록.")
+      prompt: "design/design-rules.md, design/brief.md, design/screens.md를 읽고 STAGE=tokens 실행. 결과를 design/build-log.md에 기록.")
 ```
 
-- 빌더는 한 번에 한 STAGE(tokens / components / screens / fix)만 실행하고 결과(노드 목록 + 스크린샷)를 돌려준다. 메인 대화에서 사용자에게 스크린샷을 보여주고(영역 번호 라벨 포함) 확인받은 뒤 다음 STAGE를 호출한다.
+- 빌더는 한 번에 한 STAGE(tokens / components / screens / fix)만 실행하고 결과(노드 목록 + 스크린샷)를 돌려준다. **tokens·components 스크린샷은 사용자에게 보내지 않는다** — `figma_audit.py` 통과 여부만 한 줄로 알리고 다음 STAGE로 바로 간다. 사용자 확인은 **screens STAGE에서 화면이 하나 완성될 때마다** 그 화면 스크린샷 1장을 바로 보낸다(SendUserFile, 한 번에 몰아서 보내지 않는다). **Figma 화면에는 번호 라벨(①②③)을 넣지 않는다** — Figma는 최종 확정물이다. 번호 라벨은 HTML 시안(허브)에서만 쓴다. 자리표시 컴포넌트에도 실제 문구를 넣는다("버튼"·"텍스트" 같은 더미 금지). 사용자는 어색한 화면만 답하고, 답이 없으면 다음 화면을 계속 만든다. 병렬이 가능한 STAGE(components: 아이콘/나머지, screens: 커플 화면/게스트·부록)는 같은 파일의 다른 영역에서 에이전트 2개로 나눠 돌리고 build-log는 에이전트별 파일로 받아 메인이 합친다.
 - 각 STAGE가 끝나면 빌더가 `scripts/figma_snapshot.js`를 `use_figma`로 실행해 `design/figma-snapshot.json`을 갱신한다. 메인 대화에서 `figma_audit.py`를 돌려 A단계를 먼저 스크립트로 통과시킨다. 통과 전에는 design-auditor를 부르지 않는다.
 - screens STAGE + figma_audit 통과 후 `design-auditor`를 호출한다 (C단계 스크린샷 판단 전담). 오디터 리포트는 `국소 결함 / 방향 오류 / 반복 실패` 셋 중 하나로 끝난다.
   - 국소 결함 → figma-builder에 `STAGE=fix` + 결함 목록. 고친 뒤 오디터 재실행. **결함 목록에 없는 것은 건드리지 않는다.**

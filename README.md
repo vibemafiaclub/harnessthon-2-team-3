@@ -39,10 +39,11 @@ C단계에서 탈락하면 원인에 따라 세 갈래로 라우팅한다 — �
   lofi-flow.md                                       # 시나리오 내러티브 + 클릭형 로우파이 규칙
   design-rules.md                                    # docs/이슈.md·desingissue.md를 기본값 있는 규칙 키로 변환
   reference-sourcing.md                              # 스킬이 경쟁 앱을 검색·캡처해 레퍼런스 페이지로 만드는 절차
+  structure-survey.md · final-preview.md            # 허브 첫 탭(구조 설문)과 마지막 탭(최종 미리보기) 스펙
 .claude/agents/figma-builder.md                      # 토큰 → 컴포넌트 → 화면 → fix, STAGE 단위 실행
 .claude/agents/design-auditor.md                     # A단계 스크립트 실행 + C단계 스크린샷 판단 + 3갈래 라우팅
 .claude/agents/probe-renderer.md                     # 시안·로우파이·규칙 미리보기 HTML 제작 → Artifact 배포
-.claude/skills/oss-design-harness/templates/         # brief · decisions · design-rules · build-log — design/ 폴더 산출물 양식
+.claude/skills/oss-design-harness/templates/         # brief · decisions · design-rules · icons · screens · build-log · structure-survey — design/ 산출물 양식
 docs/concept.md                                      # 컨셉 스펙 전문
 docs/이슈.md · docs/desingissue.md                    # 규칙의 원천이 된 공통 디자인 이슈
 docs/example-prd.md                                  # 예시 PRD (청첩장모임 스케줄러)

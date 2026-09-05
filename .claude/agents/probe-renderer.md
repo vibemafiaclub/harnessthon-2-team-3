@@ -11,7 +11,7 @@ description: 취향 시안(taste), 따라가 보기 투어(flow), 규칙 미리�
 
 ## 입력 (프롬프트로 받음)
 
-- `KIND=structure|taste|flow|rules|reference|icons`
+- `KIND=structure|taste|flow|rules|reference|icons|preview`
 - `OUT=design/probes/<파일명>.html`
 - KIND별 추가 입력
   - structure: `design/brief.md` §1 화면 인벤토리 초안 + 메인 대화가 프롬프트로 주는 질문 목록(≤7, 각 추천값·이유). 템플릿 `templates/structure-survey.html`, 스펙 `references/structure-survey.md`
@@ -19,6 +19,7 @@ description: 취향 시안(taste), 따라가 보기 투어(flow), 규칙 미리�
   - flow: `design/brief.md` §2 시나리오 (+ 부록 화면)
   - rules: `design/design-rules.md`, `design/icons.md`
   - reference: `design/references/` 스크린샷 + `design/references/candidates.md` 또는 `brief.md` §3 표
+  - preview: `design/brief.md` §1·§2, `design/design-rules.md`(confirmed), `design/icons.md`, `design/decisions.md`, `design/screens.md` 구성표. 스펙 `references/final-preview.md`
 
 ## 먼저 읽을 것
 
@@ -58,6 +59,7 @@ description: 취향 시안(taste), 따라가 보기 투어(flow), 규칙 미리�
 - **taste**: 한 축만 바꾸고 나머지는 FIXED 고정. `<section data-axis="n">`, `<figure data-v="A">`. 대표 화면은 flow 투어의 템플릿을 그대로 써서 배치가 흔들리지 않게 한다.
 - **rules**: design-rules.md 값을 `:root` CSS 변수로 그대로. 하드코딩 금지. 아이콘 허용 목록 전체 SVG 섹션 포함. 섹션 11개에 각각 의견 패널.
 - **reference**: 앱당 섹션 1개(이름·링크·선정 이유·스크린샷 2~4장 폰 프레임 안에). 스크린샷 위에 컴포넌트 번호 오버레이는 앱당 최대 5개. 이미지는 data URI(장당 폭 390, 16MB 한도).
+- **preview**: `references/final-preview.md` 규격 그대로. 상단 "이렇게 정했어요" 요약 6줄. 화면당 섹션 1개(brief §1 순서): 폰 프레임에 default 상태를 완성도 있게(실제 더미 데이터, 앱바·탭바·하단 CTA·세이프 에어리어), 오른쪽에 screens.md 구성표(①~⑤, 폰 프레임 같은 영역에 같은 번호), 아래 empty/loading/error 썸네일 3개(폭 130). 왼쪽 띠 "괜찮아요 👍 / 고칠 게 있어요 🤔". 🤔일 때만 구성표 행마다 "빼요" 체크 + "다른 걸로" 드롭다운(같은 종류 컴포넌트만) + 번호 칩 + 자유 입력. 페이지 끝 "이대로 Figma로 만들어 주세요" 버튼(전 화면 👍이면 활성). db: `feedback/screen-<slug>` `{unit:"screen", n, label, reaction:"ok"|"fix", remove:[행 id], swap:{행 id→컴포넌트}, marks, markNames, text}` · `feedback/preview-go` · `feedback/preview-overall`. 모든 값은 design-rules.md의 `:root` 변수. 인터랙션 없음(정적). 반환의 "단위 목록"에 화면별 구성표를 그대로 싣는다.
 
 ## 배포 전 검사
 

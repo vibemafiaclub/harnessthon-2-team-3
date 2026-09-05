@@ -23,7 +23,7 @@
 1. 상단 요약 카드: 결정된 스타일 6줄(밝기, 밀도, 형태, 강조색, 글꼴, 탭바 유무)과 "이 화면들은 Figma로 만들기 전 예상 모습이에요. 세부 간격은 Figma에서 규칙대로 맞춰집니다" 한 줄.
 2. 화면당 섹션 1개, brief §1 순서. 왼쪽 띠(다른 탭과 동일): 화면 번호·이름, "괜찮아요 👍 / 고칠 게 있어요 🤔", 저장.
    - 폰 프레임 390×844 안에 **default 상태**를 완성도 있게 그린다. 실제 더미 데이터(brief 도메인 언어), 앱바·탭바·하단 CTA·세이프 에어리어 포함.
-   - 오른쪽에 **화면 구성표**: 위에서 아래 순서로 컴포넌트 행 (예: `AppBar` 제목 "내 모임" / `Card` 목록 3개 / `BottomCTA` "새 모임 만들기"). 각 행에 원문자 번호가 있고 폰 프레임의 같은 영역에 같은 번호 라벨. 화면당 최대 5개.
+   - 오른쪽에 **화면 구성표**: 위에서 아래 순서로 컴포넌트 행 (예: `AppBar` 제목 / `Card` 목록 n개 / `BottomCTA` primary 액션 — 이름·문구는 brief.md에서만 가져온다). 각 행에 원문자 번호가 있고 폰 프레임의 같은 영역에 같은 번호 라벨. 화면당 최대 5개.
    - 폰 프레임 아래 작은 썸네일 3개: empty / loading / error 상태 (폭 130, 클릭하면 크게).
 3. "고칠 게 있어요"를 눌렀을 때만 펼침:
    - 구성표 행마다 **"빼요" 체크**와 **"다른 걸로" 드롭다운**(02 Components 목록에서 같은 종류만: 카드↔리스트 행, 바텀CTA↔앱바 액션 등)
@@ -54,7 +54,7 @@ feedback/preview-overall {unit:"overall", ...}
 
 | 순번 | 화면 | slug | 구성 (위→아래) | 상태 프레임 |
 |---|---|---|---|---|
-| 1 | 홈 | home | ① AppBar(제목) · ② Card×n · ③ BottomCTA(새 모임) · ④ TabBar | default·empty·loading·error·long-title·many-items·text-120 |
+| 1 | <화면명> | <slug> | ① AppBar(제목) · ② Card×n · ③ BottomCTA(primary 액션) · ④ TabBar | default·empty·loading·error·long-title·many-items·text-120 |
 ```
 
 figma-builder는 이 표의 구성 열만 보고 인스턴스를 배치한다. 표에 없는 컴포넌트가 필요하면 만들지 않고 build-log에 "누락 구성"으로 남긴다.

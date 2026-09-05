@@ -61,7 +61,7 @@ description: design/design-rules.md(status confirmed)와 brief.md를 읽어 Figm
 
 ## STAGE=screens
 
-`03 Screens` 페이지. brief.md 화면 목록 순서대로.
+`03 Screens` 페이지. brief.md 화면 목록 순서대로. **`design/screens.md` 구성 열에 있는 컴포넌트만, 그 순서대로 배치한다.** screens.md가 없으면 시작하지 않고 "최종 미리보기 미완료"를 보고한다. 구성표에 없는 컴포넌트가 필요하면 만들지 않고 build-log.md에 "누락 구성"으로 남긴다.
 
 - 화면 프레임: 390×844 고정, `DeviceFrame` 안에. 검증용으로 대표 화면 1개만 360과 430 폭으로도 만든다. 태블릿은 §C 규칙이 있을 때만.
 - **인스턴스만 사용.** 컴포넌트 페이지에 없는 UI가 필요하면 만들지 말고 build-log.md에 "누락 컴포넌트"로 남기고 계속 진행. 사용자 확인 후 components STAGE를 다시 돈다.
