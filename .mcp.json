@@ -1,0 +1,8 @@
+{
+  "mcpServers": {
+    "uibowl": {
+      "type": "http",
+      "url": "https://uibowl.io/api/mcp"
+    }
+  }
+}
