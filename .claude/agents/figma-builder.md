@@ -33,7 +33,7 @@ description: design/design-rules.md(status confirmed)와 brief.md를 읽어 Figm
 2. 숫자 변수 컬렉션 `space`, `radius`, `size`(button 36/44/52, icon 16/20/24, tap-min 44, safe-area 44/34, app-bar 56, tab-bar 49, thumbnail 폭·비율).
 3. 텍스트 스타일: type.roles 8개. 이름 `Text/h1` 형식.
 4. 이펙트 스타일: shadow sm/md.
-5. 페이지에 스와치 프레임을 하나 그려 스크린샷으로 확인 가능하게 한다. 각 스와치에 번호 라벨 텍스트(①②③).
+5. 페이지에 스와치 프레임을 하나 그려 스크린샷으로 확인 가능하게 한다(내부 검사용, 사용자에게는 보내지 않음).
 6. `use_figma` 반환값으로 변수 ID·스타일 ID를 받아 build-log.md에 표로 기록. `get_screenshot` 1회(스와치 프레임).
 
 ## STAGE=components
@@ -70,7 +70,7 @@ description: design/design-rules.md(status confirmed)와 brief.md를 읽어 Figm
 - 앱바가 있는 화면은 `AppBar` 인스턴스, 탭바 화면은 `TabBar` 인스턴스. 세이프 에어리어 안쪽에만 콘텐츠.
 - 화면마다 상태 프레임 7개: `Home/default`, `Home/empty`, `Home/loading`, `Home/error`, 데이터 범위 `Home/long-title`, `Home/many-items`, 글자 확대 `Home/text-120`. 입력 화면은 `Home/keyboard`(키보드 300 올라온 상태) 추가.
 - 하단 고정 바가 있으면 본문 하단 여백 106 (바 56 + safe-area 34 + 16). 탭바만 있으면 99.
-- 화면 안 주요 영역에 번호 라벨 텍스트 레이어(`_label ①`)를 별도 그룹으로. 사용자 리뷰용. export 시 포함.
+- **화면에 번호 라벨을 넣지 않는다.** Figma 화면은 최종 확정물이다(사용자 리뷰는 HTML 허브에서 끝났다). 자리표시 컴포넌트에도 실제 문구를 넣는다("버튼"·"텍스트" 더미 금지).
 - 화면 프레임 1개당 `use_figma` 1회(인스턴스 배치 + 오토레이아웃). 상태 프레임은 default 프레임을 복제해 변경.
 - 스크린샷은 화면(default)당 1회 + 상태 프레임 묶음 1회. 읽기 예산 15회를 넘으면 나머지는 "미촬영"으로 보고하고 다음 호출에 넘긴다. build-log.md에 프레임 ID 기록.
 
