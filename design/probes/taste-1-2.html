@@ -1,0 +1,419 @@
+<title>취향 시안 1·2</title>
+<style>
+:root{color-scheme:light only;
+  --bg:#F7F8FA;--card:#FFFFFF;--line:#E5E7EB;--ink:#1F2937;--sub:#6B7280;--soft:#EEF0F3;
+  --acc:#2F6BFF;--acc-d:#1F4ED8}
+html,body{background:var(--bg)}
+body{margin:0;color:var(--ink);font:14px/1.5 "Pretendard",-apple-system,"Apple SD Gothic Neo",system-ui,sans-serif;-webkit-font-smoothing:antialiased}
+*{box-sizing:border-box}
+.wrap{max-width:1440px;margin:0 auto;padding:20px 24px 72px}
+h1{font-size:22px;margin:0 0 4px;letter-spacing:-.01em}
+.sub{color:var(--sub);margin:0 0 24px}
+.counter{display:inline-block;font-size:13px;font-weight:600;color:var(--acc);background:#EEF3FF;border-radius:14px;padding:3px 12px;vertical-align:4px;margin-left:8px}
+.fb-warn{font-size:12px;color:var(--sub);background:var(--soft);border-radius:8px;padding:6px 10px;margin-bottom:16px;display:inline-block}
+.toast{position:fixed;left:50%;bottom:28px;transform:translateX(-50%);padding:8px 16px;border-radius:18px;background:var(--ink);color:#fff;font-size:13px;opacity:0;transition:opacity .2s;pointer-events:none;z-index:50}
+.toast.show{opacity:1}
+
+/* ===== axis section ===== */
+section[data-axis]{display:grid;grid-template-columns:132px minmax(0,1fr);gap:24px;align-items:start;margin-bottom:48px}
+.strip{position:sticky;top:12px;display:flex;flex-direction:column;gap:10px;width:132px}
+.strip .ax{display:flex;flex-direction:row;align-items:center;gap:8px;height:40px;padding:0 10px;background:var(--card);border:1px solid var(--line);border-radius:12px;font-size:13px;font-weight:700;white-space:nowrap;overflow:hidden}
+.strip .ax b{flex:none;width:24px;height:24px;border-radius:50%;background:var(--ink);color:#fff;font-size:13px;display:inline-flex;align-items:center;justify-content:center}
+.strip .ax span{overflow:hidden;text-overflow:ellipsis}
+.save{font:inherit;font-weight:700;font-size:14px;height:40px;width:132px;padding:0;border-radius:10px;border:0;background:var(--acc);color:#fff;cursor:pointer}
+.save:disabled{opacity:.5;cursor:default}
+.save:focus-visible,.pick button:focus-visible,.marks button:focus-visible,textarea:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
+.strip .saved{font-size:12px;font-weight:600;color:#166534;text-align:center;min-height:18px}
+.strip .go{height:auto;min-height:40px;padding:8px 6px;line-height:1.3;white-space:normal}
+.strip .alt{background:var(--card);color:var(--ink);border:1px solid var(--line)}
+.strip .alt.on{background:var(--ink);border-color:var(--ink);color:#fff}
+.strip .save[hidden]{display:none}
+.fb[hidden]{display:none}
+figure.variant.reco .phone{outline:2px solid var(--acc);outline-offset:4px}
+figure.variant{position:relative}
+.ribbon{position:absolute;top:-12px;left:50%;transform:translateX(-50%);z-index:8;height:26px;padding:0 12px;border-radius:13px;background:var(--acc);color:#fff;font-size:13px;font-weight:700;display:inline-flex;align-items:center;white-space:nowrap;box-shadow:0 4px 12px rgba(47,107,255,.35)}
+.why{font-size:13px;color:var(--sub);text-align:center;max-width:390px;margin:-4px 0 0;line-height:1.5}
+.why b{color:var(--acc)}
+h2{font-size:18px;font-weight:700;margin:0 0 14px;letter-spacing:-.01em;display:flex;align-items:baseline;gap:10px;flex-wrap:wrap}
+h2 small{font-weight:500;color:var(--sub);font-size:13px}
+.row3{display:flex;gap:24px;flex-wrap:wrap;align-items:flex-start}
+figure.variant{margin:0;display:flex;flex-direction:column;align-items:center;gap:10px;flex:none}
+figcaption{display:flex;align-items:center;gap:8px;font-size:14px;font-weight:600;color:var(--ink)}
+figcaption b{width:28px;height:28px;border-radius:8px;background:var(--ink);color:#fff;display:inline-flex;align-items:center;justify-content:center;font-size:14px}
+figcaption span{color:var(--sub);font-weight:500}
+@media (max-width:900px){section[data-axis]{grid-template-columns:1fr}.strip{position:static;flex-direction:row;width:auto;align-items:center}.strip .saved{margin-left:auto}}
+
+/* ===== phone (template = flow-tour ⑧) ===== */
+.phone{width:390px;height:844px}
+.phone{position:relative;flex:none;overflow:hidden;display:flex;flex-direction:column;user-select:none;
+  border-radius:36px;border:1px solid var(--p-line);background:var(--p-bg);color:var(--p-ink);
+  box-shadow:0 14px 40px rgba(31,41,55,.10);
+  font-size:var(--fs);
+  --p-acc:#2563EB;--p-acc-d:#1D4ED8}
+.phone.dark{box-shadow:0 14px 40px rgba(0,0,0,.35)}
+.sb{height:44px;flex:none;background:var(--p-surface);display:flex;align-items:center;justify-content:space-between;padding:0 30px;font-size:13px;font-weight:600}
+.sb .r{letter-spacing:1px;font-size:11px;color:var(--p-sub)}
+.top{height:56px;flex:none;display:grid;grid-template-columns:76px 1fr 76px;align-items:center;padding:0 10px;border-bottom:1px solid var(--p-line);position:relative;background:var(--p-bg)}
+.top .tl{justify-self:start}.top .tr{justify-self:end}
+.top .tt{text-align:center;font-weight:600;font-size:16px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ib{height:40px;min-width:40px;padding:0 6px;border-radius:8px;display:inline-flex;align-items:center;justify-content:center;font-size:15px;color:var(--p-ink);gap:2px}
+.ib svg{display:block}
+.body{flex:1;min-height:0;overflow:hidden;padding:var(--pad) 20px;display:flex;flex-direction:column;gap:var(--gap);position:relative;background:var(--p-surface)}
+.ctabar{flex:none;padding:12px 20px;border-top:1px solid var(--p-line);background:var(--p-bg);position:relative}
+.hind{height:34px;flex:none;display:flex;align-items:center;justify-content:center;background:var(--p-bg)}
+.hind i{width:134px;height:5px;border-radius:3px;background:var(--p-ink)}
+.btn{height:52px;width:100%;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:600;gap:8px;padding:0 16px}
+.btn.pri{background:var(--p-acc);color:#fff}
+.btn.sec{background:var(--p-bg);border:1px solid var(--p-line);color:var(--p-ink)}
+.btn.sm{height:32px;font-size:13px;padding:0 12px;width:auto;flex:none;border-radius:8px}
+.card{background:var(--p-bg);border:1px solid var(--p-line);border-radius:12px;padding:var(--pad);box-shadow:var(--p-shadow)}
+.card.soft{background:var(--p-soft);border-color:transparent;box-shadow:none}
+.card.reco{background:var(--p-acc-tint);border-color:var(--p-acc);box-shadow:none}
+.card .t{font-weight:600;font-size:calc(var(--fs) + 0px)}
+.card .h{font-size:calc(var(--fs) - 2px);color:var(--p-sub);margin-top:2px}
+.card.reco b{font-size:calc(var(--fs) + 1px)}
+.card.reco .h{color:var(--p-sub)}
+.tag{display:inline-flex;align-items:center;height:20px;padding:0 7px;border-radius:6px;background:var(--p-bg);border:1px solid var(--p-line);color:var(--p-sub);font-size:11px;font-weight:600;white-space:nowrap;vertical-align:middle;margin-left:6px}
+.group{display:flex;flex-direction:column;gap:var(--gap-s);position:relative}
+.mx{width:100%;border-collapse:separate;border-spacing:0;font-size:calc(var(--fs) - 2px);background:var(--p-bg);border:1px solid var(--p-line);border-radius:12px;overflow:hidden;box-shadow:var(--p-shadow)}
+.mx th,.mx td{padding:0 4px;height:var(--rowh);text-align:center;border-bottom:1px solid var(--p-soft)}
+.mx tr:last-child td{border-bottom:0}
+.mx th{background:var(--p-soft);font-weight:600;font-size:12px;color:var(--p-sub);height:calc(var(--rowh) - 8px)}
+.mx td.nm{text-align:left;padding-left:12px;font-weight:600}
+.mx td.o{font-weight:700;color:var(--p-acc)}
+.mx td.x{color:var(--p-sub)}
+.mx td.g{color:var(--p-sub);background:var(--p-soft);font-size:12px;text-align:left;padding:0 8px 0 12px}
+.mx td.g .in{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.mx td.g .btn.sm{height:28px;font-size:12px;padding:0 10px}
+.mx tr.hi td{background:var(--p-acc-tint)}
+.two{display:flex;gap:var(--gap-s)}.two>*{flex:1}
+.two .btn.sec{height:44px;font-size:calc(var(--fs) - 1px)}
+.lab{position:absolute;top:8px;left:8px;width:24px;height:24px;border-radius:50%;background:rgba(31,41,55,.78);color:#fff;font-size:13px;font-weight:700;display:flex;align-items:center;justify-content:center;z-index:5;pointer-events:none;font-family:inherit;box-shadow:0 0 0 2px rgba(255,255,255,.85)}
+.group .lab{top:-8px;left:-8px}
+.ctabar .lab{top:-12px}
+
+/* ===== feedback panel ===== */
+.fb{margin-top:20px;background:var(--card);border:1px solid var(--line);border-radius:12px;padding:16px 18px;max-width:1218px}
+.fb .eyebrow{display:flex;align-items:center;gap:8px;font-size:12px;font-weight:700;letter-spacing:.04em;color:var(--sub);text-transform:uppercase;margin-bottom:12px}
+.fb-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:16px 24px;margin-bottom:12px}
+.fb-lb{font-size:12px;font-weight:700;color:var(--sub);margin-bottom:6px}
+.pick{display:flex;gap:6px}
+.pick button{flex:1;font:inherit;font-size:14px;font-weight:600;height:40px;border-radius:10px;border:1px solid var(--line);background:#fff;color:var(--ink);cursor:pointer;white-space:nowrap;padding:0 6px}
+.pick button.on{background:var(--ink);border-color:var(--ink);color:#fff}
+.pick.worst button.on{background:#7F1D1D;border-color:#7F1D1D}
+.marks{display:flex;flex-wrap:wrap;gap:6px}
+.marks button{font:inherit;font-size:13px;height:32px;padding:0 12px 0 8px;border-radius:16px;border:1px solid var(--line);background:#fff;color:var(--ink);cursor:pointer;display:inline-flex;align-items:center;gap:6px}
+.marks button b{width:20px;height:20px;border-radius:50%;background:rgba(31,41,55,.72);color:#fff;font-size:12px;display:inline-flex;align-items:center;justify-content:center;font-weight:700}
+.marks button.on{background:#EEF3FF;border-color:var(--acc);color:var(--acc)}
+.marks button.on b{background:var(--acc)}
+textarea{width:100%;font:inherit;font-size:14px;line-height:1.5;padding:10px 12px;border:1px solid var(--line);border-radius:10px;resize:vertical;color:var(--ink);background:#fff;min-height:72px}
+textarea::placeholder{color:#9CA3AF}
+.overall{display:grid;grid-template-columns:132px minmax(0,1fr);gap:24px;align-items:start;margin-top:8px}
+.overall .fb{margin-top:0}
+.foot{margin-top:40px;font-size:12px;color:var(--sub);text-align:center}
+@media (max-width:900px){.overall{grid-template-columns:1fr}}
+@media (prefers-reduced-motion:reduce){.toast{transition:none}}
+.plain{display:block;width:100%;font-size:13px;font-weight:400;color:var(--sub);margin-top:2px}
+.quick{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin:10px 0 4px;font-size:13px;color:var(--sub)}
+.quick .lb{font-weight:700;color:var(--ink)}
+.quick button{font:inherit;font-size:14px;font-weight:700;min-width:44px;height:36px;padding:0 14px;border-radius:10px;border:1.5px solid var(--line);background:var(--card);color:var(--ink);cursor:pointer}
+.quick button.on{border-color:var(--acc);background:var(--acc);color:#fff}
+.quick button.reco::after{content:" 추천";font-size:11px;font-weight:600;opacity:.8}
+</style>
+
+<div class="wrap">
+<h1>취향 시안 1·2 <span class="counter" id="fb-count">의견 남긴 축 0개</span></h1>
+<p class="sub">추천대로 가도 되고, 다른 게 끌리면 고르세요.</p>
+<div class="fb-warn" id="fb-warn" hidden>이 환경에서는 브라우저에만 저장돼요</div>
+
+<section data-axis="1">
+  <div class="strip">
+    <div class="ax"><b>1</b><span>밝기·색온도</span></div>
+    <button class="save go" data-accept="1">추천대로 할게요</button>
+    <button class="save go alt" data-alt="1">다르게 할래요</button>
+    <button class="save" data-save="1" hidden>저장</button>
+    <div class="saved" id="saved-1"></div>
+  </div>
+  <div>
+    <h2>축 1 밝기·색온도 <small>이 축만 다르고 나머지는 같습니다</small><span class="plain">화면 바탕이 흰색인지, 살짝 미색인지, 어두운지 — 앱 전체의 첫인상</span></h2>
+    <div class="row3">
+      <figure class="variant" data-v="A"><div class="phone" data-tone="neutral" data-density="comfortable"></div><figcaption><b>A</b>라이트 <span>중립</span></figcaption></figure>
+      <figure class="variant reco" data-v="B"><span class="ribbon">추천</span><div class="phone" data-tone="warm" data-density="comfortable"></div><figcaption><b>B</b>라이트 <span>따뜻함</span></figcaption><p class="why"><b>추천 이유</b> 결혼 준비 앱이라 부드러운 인상, 달력·표 가독성은 그대로</p></figure>
+      <figure class="variant" data-v="C"><div class="phone" data-tone="dark" data-density="comfortable"></div><figcaption><b>C</b>다크 <span>차가움</span></figcaption></figure>
+    </div>
+    <div class="quick" data-quick="1"><span class="lb">마음에 드는 것</span><button data-val="A">A</button><button data-val="B">B</button><button data-val="C">C</button><button data-val="unknown">모르겠어요</button></div>
+    <div class="fb" data-fb="1" hidden>
+      <div class="eyebrow">축 1 의견</div>
+      <div class="fb-grid">
+        <div><div class="fb-lb">가장 좋은 것</div><div class="pick best" data-k="best"><button data-val="A">A</button><button data-val="B">B</button><button data-val="C">C</button><button data-val="unknown">모르겠어요</button></div></div>
+        <div><div class="fb-lb">가장 싫은 것</div><div class="pick worst" data-k="worst"><button data-val="A">A</button><button data-val="B">B</button><button data-val="C">C</button><button data-val="none">없음</button></div></div>
+      </div>
+      <div class="fb-lb">눈에 걸린 곳</div>
+      <div class="marks">
+        <button data-m="①"><b>1</b>① 상단 바</button>
+        <button data-m="②"><b>2</b>② 상태·추천 박스</button>
+        <button data-m="③"><b>3</b>③ 회신 표</button>
+        <button data-m="④"><b>4</b>④ 하단 버튼</button>
+      </div>
+      <div class="fb-lb" style="margin-top:12px">이유</div>
+      <textarea data-text placeholder="예: C는 밤에 보기 편할 것 같아요 / B는 종이 같아서 좋아요"></textarea>
+    </div>
+  </div>
+</section>
+
+<section data-axis="2">
+  <div class="strip">
+    <div class="ax"><b>2</b><span>정보 밀도</span></div>
+    <button class="save go" data-accept="2">추천대로 할게요</button>
+    <button class="save go alt" data-alt="2">다르게 할래요</button>
+    <button class="save" data-save="2" hidden>저장</button>
+    <div class="saved" id="saved-2"></div>
+  </div>
+  <div>
+    <h2>축 2 정보 밀도 <small>이 축만 다르고 나머지는 같습니다</small><span class="plain">글자와 칸 사이 간격 — 한 화면에 얼마나 많이 보이는지</span></h2>
+    <div class="row3">
+      <figure class="variant" data-v="A"><div class="phone" data-tone="neutral" data-density="compact"></div><figcaption><b>A</b>빽빽하게 <span>compact</span></figcaption></figure>
+      <figure class="variant reco" data-v="B"><span class="ribbon">추천</span><div class="phone" data-tone="neutral" data-density="comfortable"></div><figcaption><b>B</b>보통 <span>comfortable</span></figcaption><p class="why"><b>추천 이유</b> 이름·날짜 표가 많아 빽빽하면 피곤하고, 널널하면 한 화면에 안 들어옴</p></figure>
+      <figure class="variant" data-v="C"><div class="phone" data-tone="neutral" data-density="spacious"></div><figcaption><b>C</b>여유롭게 <span>spacious</span></figcaption></figure>
+    </div>
+    <div class="quick" data-quick="2"><span class="lb">마음에 드는 것</span><button data-val="A">A</button><button data-val="B">B</button><button data-val="C">C</button><button data-val="unknown">모르겠어요</button></div>
+    <div class="fb" data-fb="2" hidden>
+      <div class="eyebrow">축 2 의견</div>
+      <div class="fb-grid">
+        <div><div class="fb-lb">가장 좋은 것</div><div class="pick best" data-k="best"><button data-val="A">A</button><button data-val="B">B</button><button data-val="C">C</button><button data-val="unknown">모르겠어요</button></div></div>
+        <div><div class="fb-lb">가장 싫은 것</div><div class="pick worst" data-k="worst"><button data-val="A">A</button><button data-val="B">B</button><button data-val="C">C</button><button data-val="none">없음</button></div></div>
+      </div>
+      <div class="fb-lb">눈에 걸린 곳</div>
+      <div class="marks">
+        <button data-m="①"><b>1</b>① 상단 바</button>
+        <button data-m="②"><b>2</b>② 상태·추천 박스</button>
+        <button data-m="③"><b>3</b>③ 회신 표</button>
+        <button data-m="④"><b>4</b>④ 하단 버튼</button>
+      </div>
+      <div class="fb-lb" style="margin-top:12px">이유</div>
+      <textarea data-text placeholder="예: A는 한눈에 다 보여서 좋아요 / C는 스크롤이 많을 것 같아요"></textarea>
+    </div>
+  </div>
+</section>
+
+<div class="overall">
+  <div class="strip">
+    <div class="ax"><b>∑</b><span>전체</span></div>
+    <button class="save" data-save="overall">저장</button>
+    <div class="saved" id="saved-overall"></div>
+  </div>
+  <div class="fb" data-fb="overall">
+    <div class="eyebrow">전체 의견</div>
+    <textarea data-text placeholder="두 축을 다 보고 나서 든 생각"></textarea>
+  </div>
+</div>
+
+<p class="foot">청첩장모임 스케줄러 · 취향 시안 축 1·2 · 2026-09</p>
+</div>
+<div class="toast" id="toast"></div>
+
+<script>
+/* ---------- 시안 값 (taste-axes.md 그대로) ---------- */
+const TONES={
+  neutral:{bg:'#FFFFFF',surface:'#F5F5F7',ink:'#111827',line:'#E5E7EB',sub:'#6B7280',soft:'#EEF0F3',tint:'#EFF6FF',shadow:'0 1px 2px rgba(0,0,0,.06)'},
+  warm:{bg:'#FDFBF7',surface:'#F5F0E8',ink:'#1F1B16',line:'#E7E0D4',sub:'#7A7166',soft:'#EFE9DF',tint:'#EEF3FD',shadow:'0 1px 2px rgba(0,0,0,.06)'},
+  dark:{bg:'#0F1115',surface:'#181B22',ink:'#E6E8EC',line:'#2A2F3A',sub:'#9AA1AD',soft:'#20242D',tint:'rgba(37,99,235,.18)',shadow:'none'}
+};
+const DENSITY={
+  compact:{gap:8,gapS:4,pad:12,rowh:48,fs:14},
+  comfortable:{gap:16,gapS:8,pad:16,rowh:56,fs:15},
+  spacious:{gap:24,gapS:12,pad:20,rowh:64,fs:16}
+};
+/* lucide: chevron-left 24, ellipsis-vertical 20 */
+const ICO={
+  back:'<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg>',
+  more:'<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="1"/><circle cx="12" cy="5" r="1"/><circle cx="12" cy="19" r="1"/></svg>'
+};
+
+/* ---------- ⑧ 회신 현황 화면 (flow-tour 템플릿: 상태바 44 / 상단 바 56 / 본문 / CTA 52 / 홈 34) ---------- */
+function screen(){
+  const cellO=v=>v==='O'?`<td class="o">O</td>`:`<td class="x">X</td>`;
+  const row=(nm,c,hi)=>`<tr${hi?' class="hi"':''}><td class="nm">${nm}</td>${c.map(cellO).join('')}</tr>`;
+  return `
+  <div class="sb"><span>9:41</span><span class="r">●●● ▮</span></div>
+  <div class="top"><span class="lab">①</span><div class="tl"><span class="ib">${ICO.back}모임</span></div><div class="tt">대학 동기</div><div class="tr"><span class="ib">${ICO.more}</span></div></div>
+  <div class="body">
+    <div class="group"><span class="lab">②</span>
+      <div class="card soft"><div class="t">회신 대기<span class="tag">신부측</span></div><div class="h">2/3 회신 · 마감 1일 전 (10/8)</div></div>
+      <div class="card reco"><b>답한 2명 모두 가능한 날: 10/18 (토)</b><div class="h">지현·은비 가능 · 태호는 아직 답이 없어요</div></div>
+    </div>
+    <div class="group"><span class="lab">③</span>
+      <table class="mx">
+        <tr><th></th><th>10/11 토</th><th>10/12 일</th><th>10/18 토</th></tr>
+        ${row('지현',['O','X','O'])}
+        <tr><td class="nm">태호</td><td class="g" colspan="3"><div class="in"><span>아직 답 없음</span><span class="btn sec sm">다시 알림</span></div></td></tr>
+        ${row('은비',['X','O','O'])}
+      </table>
+      <div class="two"><span class="btn sec">구성원 수정</span><span class="btn sec">후보 추가</span><span class="btn sec">링크 공유</span></div>
+    </div>
+  </div>
+  <div class="ctabar"><span class="lab">④</span><div class="btn pri">10/18로 확정</div></div>
+  <div class="hind"><i></i></div>`;
+}
+document.querySelectorAll('.phone').forEach(p=>{
+  const t=TONES[p.dataset.tone],d=DENSITY[p.dataset.density];
+  const s=p.style;
+  s.setProperty('--p-bg',t.bg);s.setProperty('--p-surface',t.surface);s.setProperty('--p-ink',t.ink);
+  s.setProperty('--p-line',t.line);s.setProperty('--p-sub',t.sub);s.setProperty('--p-soft',t.soft);
+  s.setProperty('--p-acc-tint',t.tint);s.setProperty('--p-shadow',t.shadow);
+  s.setProperty('--gap',d.gap+'px');s.setProperty('--gap-s',d.gapS+'px');s.setProperty('--pad',d.pad+'px');
+  s.setProperty('--rowh',d.rowh+'px');s.setProperty('--fs',d.fs+'px');
+  if(p.dataset.tone==='dark')p.classList.add('dark');
+  p.innerHTML=screen();
+});
+
+/* ---------- 의견 패널 ---------- */
+const $=(s,r=document)=>r.querySelector(s);
+const AXES={1:'밝기·색온도',2:'정보 밀도'};
+const RECO={1:'B',2:'B'};
+const MARK_NAMES={'①':'상단 바','②':'상태·추천 박스','③':'회신 표','④':'하단 버튼'};
+const LS_KEY='taste-1-2-feedback';
+let db=null,dbReady=false;
+const FB={};        // saved docs by unit id ('1','2','overall')
+const DRAFT={};
+
+let toastT;
+function toast(msg){const t=$('#toast');t.textContent=msg;t.classList.add('show');clearTimeout(toastT);toastT=setTimeout(()=>t.classList.remove('show'),2200);}
+function fmtAgo(iso){
+  if(!iso)return '';
+  const d=(Date.now()-new Date(iso).getTime())/1000;
+  if(d<60)return '방금';if(d<3600)return Math.floor(d/60)+'분 전';if(d<86400)return Math.floor(d/3600)+'시간 전';
+  return new Date(iso).toLocaleDateString('ko-KR');
+}
+function updateCount(){const n=['1','2'].filter(k=>FB[k]).length;$('#fb-count').textContent=`의견 남긴 축 ${n}개`;}
+function draft(id){
+  if(!DRAFT[id]){const s=FB[id];DRAFT[id]={best:s?s.best||null:null,worst:s?s.worst||null:null,marks:s?[...(s.marks||[])]:[],text:s?s.text||'':''};}
+  return DRAFT[id];
+}
+function render(id){
+  const panel=$(`.fb[data-fb="${id}"]`),d=draft(id);
+  panel.querySelectorAll('.pick').forEach(p=>{const k=p.dataset.k;p.querySelectorAll('button').forEach(b=>b.classList.toggle('on',b.dataset.val===d[k]));});
+  panel.querySelectorAll('.marks button').forEach(b=>b.classList.toggle('on',d.marks.includes(b.dataset.m)));
+  const ta=$('[data-text]',panel);if(document.activeElement!==ta)ta.value=d.text;
+  const s=FB[id];
+  $(`#saved-${id}`).textContent=s?`저장됨 ✓ ${s.text==='추천대로'?'추천대로':''} ${fmtAgo(s.updatedAt)}`:'';
+  if(id!=='overall'){
+    const acc=$(`[data-accept="${id}"]`);
+    acc.textContent=s&&s.text==='추천대로'?'추천대로 ✓':'추천대로 할게요';
+    if(s&&s.text!=='추천대로'&&!panel.dataset.opened)openAlt(id);
+  }
+}
+function openAlt(id){
+  const panel=$(`.fb[data-fb="${id}"]`);
+  panel.hidden=false;panel.dataset.opened='1';
+  $(`[data-alt="${id}"]`).classList.add('on');
+  $(`[data-save="${id}"]`).hidden=false;
+}
+function renderAll(){['1','2','overall'].forEach(render);}
+
+document.querySelectorAll('.fb').forEach(panel=>{
+  const id=panel.dataset.fb;
+  panel.addEventListener('click',e=>{
+    const pb=e.target.closest('.pick button');
+    if(pb){const k=pb.parentElement.dataset.k,d=draft(id);d[k]=d[k]===pb.dataset.val?null:pb.dataset.val;render(id);return;}
+    const mb=e.target.closest('.marks button');
+    if(mb){const d=draft(id),m=mb.dataset.m,i=d.marks.indexOf(m);i<0?d.marks.push(m):d.marks.splice(i,1);d.marks.sort();render(id);}
+  });
+  $('[data-text]',panel).addEventListener('input',e=>{draft(id).text=e.target.value;});
+});
+
+async function persist(path,doc){
+  if(dbReady&&db){await db.doc(path).set(doc);}
+  else{
+    let all={};try{all=JSON.parse(localStorage.getItem(LS_KEY)||'{}');}catch(_){}
+    all[path]=doc;try{localStorage.setItem(LS_KEY,JSON.stringify(all));}catch(_){throw {code:'unavailable',message:'localStorage 실패'};}
+  }
+}
+function buildDoc(id){
+  const d=draft(id),now=new Date().toISOString();
+  if(id==='overall')return {unit:'overall',n:0,label:'전체',best:null,worst:null,marks:[],markNames:[],text:d.text.trim(),updatedAt:now};
+  return {unit:'axis',n:+id,label:AXES[id],best:d.best,worst:d.worst,marks:[...d.marks],markNames:d.marks.map(m=>MARK_NAMES[m]),text:d.text.trim(),updatedAt:now};
+}
+function errMsg(e){
+  const c=e&&e.code;
+  if(c==='not_granted')return '저장 권한이 없어요 — 페이지를 다시 열어 주세요';
+  if(c==='revoked')return '접근이 끊겼어요 — 페이지를 다시 열어 주세요';
+  if(c==='quota_exceeded')return '저장 공간이 가득 찼어요';
+  if(c==='resource_exhausted')return '잠시 뒤 다시 눌러 주세요';
+  if(c==='invalid_argument')return '저장 내용에 문제가 있어요';
+  return '저장 실패, 다시 눌러 주세요';
+}
+document.querySelectorAll('[data-save]').forEach(btn=>{
+  btn.addEventListener('click',async()=>{
+    const id=btn.dataset.save,doc=buildDoc(id);
+    const path=id==='overall'?'feedback/overall':`feedback/axis-${id}`;
+    btn.disabled=true;btn.textContent='저장 중…';
+    try{await persist(path,doc);FB[id]=doc;delete DRAFT[id];updateCount();render(id);toast('저장됨 ✓');}
+    catch(e){console.warn('feedback save failed',e&&e.code,e);toast(errMsg(e));}
+    finally{btn.disabled=false;btn.textContent='저장';}
+  });
+});
+document.querySelectorAll('[data-alt]').forEach(btn=>{
+  btn.addEventListener('click',()=>{
+    const id=btn.dataset.alt,panel=$(`.fb[data-fb="${id}"]`);
+    if(panel.hidden){openAlt(id);panel.scrollIntoView({behavior:'smooth',block:'nearest'});}
+    else{panel.hidden=true;delete panel.dataset.opened;btn.classList.remove('on');$(`[data-save="${id}"]`).hidden=true;}
+  });
+});
+document.querySelectorAll('[data-accept]').forEach(btn=>{
+  btn.addEventListener('click',async()=>{
+    const id=btn.dataset.accept;
+    const doc={unit:'axis',n:+id,label:AXES[id],best:RECO[id],worst:null,marks:[],markNames:[],text:'추천대로',updatedAt:new Date().toISOString()};
+    btn.disabled=true;btn.textContent='저장 중…';
+    try{await persist(`feedback/axis-${id}`,doc);FB[id]=doc;delete DRAFT[id];updateCount();render(id);toast('저장됨 ✓ 추천대로');}
+    catch(e){console.warn('accept save failed',e&&e.code,e);toast(errMsg(e));btn.textContent='추천대로 할게요';}
+    finally{btn.disabled=false;}
+  });
+});
+function applyLoaded(pairs){
+  pairs.forEach(([docId,data])=>{
+    if(!data)return;
+    if(docId==='overall')FB.overall=data;
+    else{const m=/^axis-(\d+)$/.exec(docId);if(m&&AXES[m[1]])FB[m[1]]=data;}
+  });
+  updateCount();renderAll();
+}
+async function initFeedback(){
+  try{
+    db=window.claude&&typeof window.claude.use==='function'?await window.claude.use('db'):null;
+  }catch(e){db=null;}
+  if(db){
+    dbReady=true;
+    try{
+      const snap=await db.collection('feedback').get();
+      applyLoaded(snap.docs.map(d=>[d.id,d.data()]));
+    }catch(e){console.warn('feedback load failed',e&&e.code,e);toast('저장된 의견을 불러오지 못했어요');}
+  }else{
+    $('#fb-warn').hidden=false;
+    let all={};try{all=JSON.parse(localStorage.getItem(LS_KEY)||'{}');}catch(_){}
+    applyLoaded(Object.entries(all).map(([p,d])=>[p.replace(/^feedback\//,''),d]));
+  }
+}
+renderAll();
+initFeedback();
+
+/* ---------- 항상 보이는 빠른 선택 (마음에 드는 것) ---------- */
+function renderQuick(id){
+  const q=document.querySelector(`.quick[data-quick="${id}"]`);if(!q)return;
+  const s=FB[id],cur=s?s.best:null;
+  q.querySelectorAll('button').forEach(b=>{b.classList.toggle('on',b.dataset.val===cur);b.classList.toggle('reco',b.dataset.val===RECO[id]);});
+}
+document.querySelectorAll('.quick').forEach(q=>{
+  const id=q.dataset.quick;
+  q.addEventListener('click',async e=>{
+    const b=e.target.closest('button');if(!b)return;
+    const val=b.dataset.val,d=draft(id);d.best=val;
+    const doc=buildDoc(id);if(!doc.text)doc.text=val===RECO[id]?'추천대로':'직접 선택';
+    q.querySelectorAll('button').forEach(x=>x.disabled=true);
+    try{await persist(`feedback/axis-${id}`,doc);FB[id]=doc;delete DRAFT[id];updateCount();render(id);toast(val===RECO[id]?'저장됨 ✓ 추천대로':'저장됨 ✓ '+(val==='unknown'?'모르겠어요':val));}
+    catch(err){console.warn('quick save failed',err&&err.code,err);toast(errMsg(err));}
+    finally{q.querySelectorAll('button').forEach(x=>x.disabled=false);}
+  });
+});
+const _render=render;render=function(id){_render(id);renderQuick(id);};
+</script>
