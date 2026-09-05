@@ -68,14 +68,14 @@ design/
 - **레퍼런스는 스킬이 찾는다.** 사용자에게 레퍼런스를 달라고 하지 않는다. `references/reference-sourcing.md`대로 PRD 도메인의 경쟁 앱 3~5개를 검색해 고르고, 앱스토어 스크린샷을 모아 `probe-renderer`(KIND=reference)로 레퍼런스 페이지를 만든다. 앱마다 "왜 골랐는지" 한 줄과 컴포넌트 번호 라벨. 사용자는 "가져오고 싶은 번호 / 싫은 번호 / 이유"만 답한다. 전체를 따라 하지 않는다. 일부만 가져온다. 사용자가 따로 가진 캡처가 있으면 같은 페이지에 추가한다.
 - **시안 생성.** PRD의 대표 화면 하나를 로우파이 콘텐츠로 그린다. 축 하나만 바꾸고 나머지 축은 기본값(또는 앞 축에서 확정된 값)에 고정한다. 축을 섞으면 왜 골랐는지 알 수 없게 된다.
 - 페이지 제작은 위임한다: `Agent(subagent_type: "probe-renderer", prompt: "KIND=taste AXES=1,4 FIXED=<앞 축 확정값> RECOMMEND=<축별 추천 시안과 이유> OUT=design/probes/taste-color.html")`. 탭은 주제별 3개(색상=축1+4 / 모양·간격=축3+2 / 글자·달력=축5+추가축, `taste-axes.md` 표 참고). 추천은 메인 대화가 PRD 도메인을 보고 정한다. 반환 후 hub.json에 탭을 추가하고 `build_hub.py` → 허브를 같은 URL로 재배포한다. 라벨 지도를 보관한다.
-- 반응은 페이지 안 패널로 받는다. 축마다 "추천대로 할게요"(text:"추천대로"로 저장) 또는 "다르게 할래요"(가장 좋은 A/B/C/모르겠어요·가장 싫은·번호 칩·자유 입력)가 `feedback/axis-<n>`에 남는다. 사용자가 "다 봤어"라고 하면 `read_db`로 읽어 decisions.md에 옮긴다. 의견이 0건인 축만 터미널로 묻는다. 한 페이지에 축 2개까지.
+- 반응은 페이지 안에서 받는다. 축마다 "추천: B — 이유" 텍스트 한 줄이 있고, 사용자는 **마음에 드는 폰 화면을 누르면** 즉시 `feedback/axis-<n>`에 저장된다(text: 추천이면 "추천대로", 아니면 "직접 선택"). 버튼·세부 의견 칸은 없다. 사용자가 "다 봤어"라고 하면 `read_db`로 읽어 decisions.md에 옮긴다. 저장이 0건인 축은 추천값 + 가정 로그. 한 페이지에 축 2개까지.
 - 한 축에서 "모르겠어요"면 기본값 + 가정 로그. 좋다와 싫다의 이유가 충돌하면 그 축만 중간값 시안으로 2차를 한 번 보여준다. 3차는 없다.
 
 ## 4단계 규칙 확정 요령
 
 - `design/icons.md`를 만든다. brief.md 화면 목록의 모든 액션·상태·탭·빈 상태를 행으로 놓고 lucide 이름을 하나씩 배정한다 (템플릿 `templates/icons.md`). 같은 의미에 두 아이콘, 같은 아이콘에 두 의미가 없는지 표를 훑어 확인한다. 규칙 미리보기 페이지에 이 목록을 실제 lucide SVG로 그려 사용자에게 보여준다.
 - `references/design-rules.md`의 항목을 전부 채운 `design/design-rules.md`를 만든다. PRD 화면에 등장하지 않는 항목(예: 썸네일 없는 서비스)은 기본값으로 채우고 `(미사용)` 표시.
-- 규칙 미리보기는 `probe-renderer`에 `KIND=rules OUT=design/probes/rules-preview.html`로 위임한다. 버튼 3사이즈 × 5상태, 아이콘 허용 목록 전체, 썸네일 그리드(선택 상태 포함), 바텀시트·다이얼로그, 탭바·상단 앱바, 타이포 역할표, 빈 상태·로딩 상태가 390 폭 프레임 안에 번호 라벨과 함께 담긴다. 섹션마다 의견 패널이 있어 사용자는 어색한 번호를 눌러 저장하고, 스킬이 `feedback/section-<n>`을 읽는다. "다르게"가 붙은 섹션에만 국소 질문("눌렀을 때 색이 너무 어두운가요, 너무 약한가요?")을 허용한다.
+- 규칙 미리보기는 `probe-renderer`에 `KIND=rules OUT=design/probes/rules-preview.html`로 위임한다. 버튼 3사이즈 × 5상태, 아이콘 허용 목록 전체, 썸네일 그리드(선택 상태 포함), 바텀시트·다이얼로그, 탭바·상단 앱바, 타이포 역할표, 빈 상태·로딩 상태가 390 폭 프레임 안에 번호 라벨과 함께 담긴다. 페이지 상단 "전체 추천대로 할게요" 하나로 11개 섹션을 한 번에 저장하고, 어색한 섹션만 부품 칩·이유를 적어 저장한다. 스킬이 `feedback/section-<n>`을 읽어 marks가 있는 섹션에만 국소 질문("눌렀을 때 색이 너무 어두운가요, 너무 약한가요?")을 허용한다. 아이콘 탭(KIND=icons, "전체 추천대로" + 카드마다 추천·대안 2개 상시 표시)은 취향과 무관하므로 3단계와 **병렬**로 미리 만든다.
 - 확정 후 design-rules.md 맨 위에 `status: confirmed`와 날짜를 적는다. figma-builder는 이 값이 없으면 시작하지 않는다.
 
 ## 4.5단계 최종 미리보기 (Figma로 만들기 전 마지막 게이트)
@@ -112,13 +112,42 @@ Agent(subagent_type: "figma-builder",
       prompt: "design/design-rules.md, design/brief.md, design/screens.md를 읽고 STAGE=tokens 실행. 결과를 design/build-log.md에 기록.")
 ```
 
-- 빌더는 한 번에 한 STAGE(tokens / components / screens / fix)만 실행하고 결과(노드 목록 + 스크린샷)를 돌려준다. **tokens·components 스크린샷은 사용자에게 보내지 않는다** — `figma_audit.py` 통과 여부만 한 줄로 알리고 다음 STAGE로 바로 간다. 사용자 확인은 **screens STAGE에서 화면이 하나 완성될 때마다** 그 화면 스크린샷 1장을 바로 보낸다(SendUserFile, 한 번에 몰아서 보내지 않는다). **Figma 화면에는 번호 라벨(①②③)을 넣지 않는다** — Figma는 최종 확정물이다. 번호 라벨은 HTML 시안(허브)에서만 쓴다. 자리표시 컴포넌트에도 실제 문구를 넣는다("버튼"·"텍스트" 같은 더미 금지). 사용자는 어색한 화면만 답하고, 답이 없으면 다음 화면을 계속 만든다. 병렬이 가능한 STAGE(components: 아이콘/나머지, screens: 커플 화면/게스트·부록)는 같은 파일의 다른 영역에서 에이전트 2개로 나눠 돌리고 build-log는 에이전트별 파일로 받아 메인이 합친다.
+- 빌더는 한 번에 한 STAGE(tokens / components / screens / fix)만 실행하고 결과(노드 목록 + 스크린샷)를 돌려준다. **tokens·components 스크린샷은 사용자에게 보내지 않는다** — `figma_audit.py` 통과 여부만 한 줄로 알리고 다음 STAGE로 바로 간다. 사용자 확인은 **screens STAGE에서 화면이 하나 완성될 때마다** 그 화면 스크린샷 1장을 바로 보낸다(SendUserFile, 한 번에 몰아서 보내지 않는다). **Figma 화면에는 번호 라벨(①②③)을 넣지 않는다** — Figma는 최종 확정물이다. 번호 라벨은 HTML 시안(허브)에서만 쓴다. 자리표시 컴포넌트에도 실제 문구를 넣는다("버튼"·"텍스트" 같은 더미 금지). 사용자는 어색한 화면만 답하고, 답이 없으면 다음 화면을 계속 만든다. **screens STAGE는 기본이 병렬**이다 — 최종 확정은 4.5단계 HTML 미리보기에서 끝났으므로 Figma 화면은 순서대로 볼 필요가 없다. brief §1 화면을 3~4개씩 묶어 에이전트 2~3개에 나눠 돌린다(같은 페이지, x 위치를 화면 번호×470으로 고정해 겹치지 않게). components도 아이콘/나머지로 나눈다. build-log는 에이전트별 파일(build-log-screens-<n>.md)로 받아 메인이 합치고, 스냅샷·figma_audit은 마지막 에이전트 하나만 실행한다. Figma 읽기 예산(분당 10)은 에이전트 합산이므로 화면당 스크린샷 1회 외 읽기 금지.
 - 각 STAGE가 끝나면 빌더가 `scripts/figma_snapshot.js`를 `use_figma`로 실행해 `design/figma-snapshot.json`을 갱신한다. 메인 대화에서 `figma_audit.py`를 돌려 A단계를 먼저 스크립트로 통과시킨다. 통과 전에는 design-auditor를 부르지 않는다.
 - screens STAGE + figma_audit 통과 후 `design-auditor`를 호출한다 (C단계 스크린샷 판단 전담). 오디터 리포트는 `국소 결함 / 방향 오류 / 반복 실패` 셋 중 하나로 끝난다.
   - 국소 결함 → figma-builder에 `STAGE=fix` + 결함 목록. 고친 뒤 오디터 재실행. **결함 목록에 없는 것은 건드리지 않는다.**
   - 방향 오류 → 3단계 decisions.md의 해당 축만 재발산.
   - 반복 실패(같은 이유로 3회) → 사용자에게 에스컬레이션. "이 정도면 됐다"는 항상 사용자가 정한다.
 - 재시도 상한 3회. 초과 시 현재 상태와 남은 문제를 표로 정리해 사용자에게 넘긴다.
+
+
+## 운영 세팅 (확정된 작업 방식 — 모든 프로젝트 공통)
+
+| 항목 | 방식 |
+|---|---|
+| 링크 | 항상 **허브 하나**(`design/probes/hub.html`, `capabilities: {db: {}}`). 탭은 단계마다 hub.json에 추가하고 같은 URL로 재배포. 외부 공유가 필요하면 `python3 scripts/build_hub.py --share` → `hub-share.html`을 **별도 artifact**(`capabilities: {}`, 공개 가능)로 배포. 공유본 저장은 보는 사람 브라우저에만 남는다고 사용자에게 말한다 |
+| 저장 확인 | 사용자가 "저장했다"고 하면 믿지 말고 `read_db`로 확인한다. 허브 db 브리지는 postMessage RPC(build_hub.py가 주입) — 자식 페이지는 `claude.use("db")`만 쓴다. 탭 배지 카운트는 hub.json `prefix`/`prefixes`로 센다 |
+| 선택 UI | 추천은 텍스트("추천: B — 이유"), 선택은 화면 클릭 또는 "전체 추천대로/괜찮아요" 버튼 하나. "다르게 할래요"·"전체 의견"·섹션별 👍·번호 칩 세부 패널은 **없다**. 용어에는 `.plain` 쉬운 설명 한 줄 |
+| 탭 구성 | 구조 · 따라가 보기 · 레퍼런스 · 색상 · 모양·간격 · 글자·달력 · 아이콘 · 규칙 미리보기 · 최종 미리보기 (순서 고정) |
+| 안내 문구 | 페이지에 범례·설명 문장 금지. 제목 아래 한 줄만 |
+| 브라우저 | claude-in-chrome·chrome-devtools 금지. 렌더 확인은 사용자 |
+| Figma | 번호 라벨 없음. tokens·components 스크린샷은 사용자에게 안 보냄. screens는 병렬 + 화면당 스크린샷 1장 즉시 전송. components STAGE는 사용자가 "필요 없다"고 하면 중단하고 화면은 자리표시(실제 문구)로 만든 뒤 fix STAGE에서 교체 |
+| 게이트 | 단계 끝마다 `check_phase.py`, Figma STAGE 끝마다 `figma_audit.py`. 스크립트 exit 0 전에는 "끝났다"고 하지 않는다 |
+| 기록 | 사용자 원문은 brief.md에 그대로, 해석은 별도. 추천 수락은 가정 로그에 "추천 수락"으로. 하네스 규칙 변경은 사용자가 산출물로 검증한 뒤에만 반영 |
+| 일반성 | 도메인 이름·더미 데이터·화면 수를 스킬/스크립트/템플릿에 박지 않는다. 프로젝트 값은 `design/`에만 |
+
+## 서브 에이전트 활용법
+
+| 에이전트 | 언제 | 호출 형태 | 주의 |
+|---|---|---|---|
+| `probe-renderer` | 허브 탭 하나 만들 때마다 | `Agent(subagent_type:"probe-renderer", prompt:"KIND=<structure|flow|reference|taste|icons|rules|preview> OUT=design/probes/<file>.html …")` | 배포 안 함(파일만). 여러 탭은 **동시에** 띄운다(레퍼런스+취향 1페이지, 취향 3페이지 등). 반환된 라벨 지도를 보관 |
+| `general-purpose` | 레퍼런스 앱 검색·스크린샷 수집, 조사 작업 | 사용자 답과 무관한 조사는 인터뷰 중에 **미리** 돌린다 | 결과는 `design/references/candidates.md`처럼 별도 파일로 받는다 |
+| `figma-builder` | STAGE 하나씩. screens는 화면 3~4개씩 에이전트 2~3개 | `STAGE=screens` + 담당 화면 번호 + x 위치(번호×470) + 스크린샷 파일명 규칙 | build-log는 에이전트별 파일. 스냅샷·audit은 마지막 하나만. 변경 사항(색 값 등)은 `SendMessage`로 진행 중인 에이전트에 바로 알린다 |
+| `design-auditor` | screens + figma_audit 통과 후 | 결함을 국소/방향/반복 셋 중 하나로 라우팅 | 국소 결함만 `STAGE=fix`에 넘긴다 |
+| 진행 중 에이전트에 지시 변경 | 사용자 피드백이 오면 | `SendMessage(to:<agentId>, message:…)` — 재생성하지 말고 이어서 고치게 | 같은 파일을 두 에이전트가 동시에 쓰지 않게 영역·파일을 나눈다 |
+| 파일 생성 감시 | 화면 스크린샷 순차 전송 | `Monitor`로 `design/screenshots/screen-*.png` 감시 → 새 파일마다 `SendUserFile` | 파일 크기가 2초간 안 변할 때만 보낸다(쓰기 중 전송 방지) |
+| 병렬 원칙 | 사용자 답이 필요 없는 작업은 전부 병렬 | 인터뷰 대기 중에 레퍼런스 소싱·아이콘 탭·design-rules 초안을 미리 | 한 사용자 응답을 두 번 기다리게 하지 않는다 |
+| 중단 | 사용자가 "필요 없다"면 `TaskStop` | 관련 에이전트에 분담 변경을 `SendMessage`로 알린다 | |
 
 ## Figma MCP 예산
 
