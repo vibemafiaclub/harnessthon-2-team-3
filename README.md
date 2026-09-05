@@ -45,14 +45,21 @@ C단계에서 탈락하면 원인에 따라 세 갈래로 라우팅한다 — �
 .claude/skills/oss-design-harness/templates/         # brief · decisions · design-rules · build-log — design/ 폴더 산출물 양식
 docs/concept.md                                      # 컨셉 스펙 전문
 docs/이슈.md · docs/desingissue.md                    # 규칙의 원천이 된 공통 디자인 이슈
+docs/example-prd.md                                  # 예시 PRD (청첩장모임 스케줄러)
+scripts/                                             # check_phase · figma_snapshot · figma_audit · build_hub + 테스트
 ```
 
-## 사용법 (참가자용)
+## 사용법
 
-1. Figma 파일을 열고, 이 레포를 프로젝트 루트로 해서 Claude Code(또는 다른 코딩 에이전트)를 실행한다.
-2. `.claude/skills/oss-design-harness/SKILL.md`의 각 단계 `TODO`를 채워 넣는다 — 이게 당신의 판단기준을 코드화하는 작업이다.
-3. 산출물은 프로젝트의 `design/` 폴더에 남긴다 (스킬 폴더의 `templates/`를 복사해서 사용).
-4. 완성된 SKILL.md는 팀/코파운더와 공유해 비교한다.
+PRD 하나만 있으면 시작할 수 있다. 예시 PRD는 `docs/example-prd.md`.
+
+1. 이 레포를 프로젝트 루트로 해서 Claude Code를 실행한다. Figma MCP를 `/mcp`로 인증한다 (5단계 이후에만 필요).
+2. PRD 파일을 두고 이렇게 말한다: `docs/example-prd.md 이 PRD로 디자인 인터뷰 해줘`.
+3. 스킬이 링크 하나(허브 Artifact)를 준다. 탭을 순서대로 보며 "추천대로" 또는 "다르게"를 누르고 저장한 뒤 "다 봤어"라고 말한다. 1단계 구조 → 2단계 플로우 → 3단계 레퍼런스·취향 → 4단계 규칙 순서다.
+4. 규칙이 확정되면 figma-builder가 토큰 → 컴포넌트 → 화면을 만들고, 단계마다 스크린샷을 확인한다. design-auditor가 검수하고 결함은 자동으로 고친다.
+5. 산출물은 프로젝트의 `design/` 폴더에 쌓인다 (git 추적 제외). Figma 파일과 `design/design-rules.md`를 개발 쪽에 넘기면 끝이다.
+
+검증 스크립트는 `scripts/README.md`, 전체 흐름도는 [FigJam](https://www.figma.com/board/BW8kTvRl6xeGHp1cOMOgHw) 참고.
 
 ## 라이선스
 

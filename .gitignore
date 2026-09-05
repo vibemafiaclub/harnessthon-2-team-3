@@ -3,3 +3,4 @@ __pycache__/
 .DS_Store
 design/figma-snapshot.json
 design/references/*.png
+design/

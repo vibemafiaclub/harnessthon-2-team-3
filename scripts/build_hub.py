@@ -13,7 +13,7 @@ design/probes/hub.html(허브) 한 장을 만든다. 링크 하나만 사용자�
 
 hub.json 형식:
 {
-  "title": "청첩장모임 스케줄러 — 디자인 인터뷰",
+  "title": "<프로젝트명> — 디자인 인터뷰",
   "tabs": [
     {"file": "structure.html", "title": "구조",       "prefix": "structure-", "stage": "1단계 구조"},
     {"file": "flow-tour.html", "title": "따라가 보기", "prefix": "scene-", "stage": "2단계 플로우"},
