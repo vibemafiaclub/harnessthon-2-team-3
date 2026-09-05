@@ -747,6 +747,71 @@ def check_safe_area(snap, th, findings):
                     "하단 {:g}".format(y + h), "≤ {:g}".format(limit)))
 
 
+FIXED_BAR_PREFIXES = ("BottomCTA", "Slot/BottomCTA", "TabBar", "Slot/TabBar", "DeviceFrame/home", "Slot/DeviceFrame/home")
+OVERLAY_PREFIXES = ("BottomSheet", "Slot/BottomSheet", "Sheet", "Dialog", "Slot/Dialog", "Overlay", "Snackbar", "Slot/Snackbar", "Toast")
+
+
+def _abs_y(snap, node, frame_id):
+    """화면 프레임 기준 절대 y. 스냅샷 좌표는 부모 기준이므로 조상 y를 누적한다."""
+    y = numeric(node.get("y")) or 0
+    cur = snap.parent(node)
+    while cur is not None and cur.get("id") != frame_id:
+        y += numeric(cur.get("y")) or 0
+        cur = snap.parent(cur)
+    return y
+
+
+def check_no_clip(snap, th, findings):
+    """fixed.no-clip: 본문 요소가 하단 고정 바(CTA·탭바) 뒤로 잘리면 안 된다.
+
+    스크롤 영역의 마지막 요소 아래 여백 = 고정 바 + safe-area + 16 (scroll.last-item).
+    시트·다이얼로그·스낵바처럼 원래 바 위에 겹치는 오버레이는 제외한다.
+    """
+    for node, screen, state, width in screen_frames(snap):
+        fid = node.get("id")
+        frame_h = numeric(node.get("height")) or th.frame_h
+        bars = []
+        for child in snap.children.get(fid, []):
+            name = child.get("name") or ""
+            if name.startswith(FIXED_BAR_PREFIXES) or component_kind(child) in ("BottomCTA", "TabBar"):
+                y = _abs_y(snap, child, fid)
+                if y is not None:
+                    bars.append(y)
+        if not bars:
+            continue
+        bar_top = min(bars)
+        for desc in snap.descendants(node):
+            name = desc.get("name") or ""
+            if is_label(desc) or desc.get("type") in ("GROUP",):
+                continue
+            # 고정 바 자신·그 안의 것, 오버레이 계열은 제외
+            skip = False
+            for anc in [desc] + list(snap.ancestors(desc)):
+                an = anc.get("name") or ""
+                if anc.get("id") == fid:
+                    break
+                if an.startswith(FIXED_BAR_PREFIXES) or an.startswith(OVERLAY_PREFIXES) or component_kind(anc) in ("BottomCTA", "TabBar", "BottomSheet", "Dialog", "Snackbar"):
+                    skip = True
+                    break
+            if skip:
+                continue
+            if desc.get("type") not in ("TEXT", "INSTANCE", "FRAME", "RECTANGLE", "COMPONENT"):
+                continue
+            h = numeric(desc.get("height"))
+            if h is None:
+                continue
+            # 스크롤 컨테이너(본문) 자체는 바 위에서 끝나면 OK; 그 안의 잎 요소가 넘치면 잘림
+            if desc.get("type") == "FRAME" and snap.children.get(desc.get("id")):
+                continue
+            y = _abs_y(snap, desc, fid)
+            bottom = y + h
+            if bottom > bar_top + 1 and y < bar_top:
+                findings.append(Finding(
+                    SCREENS_PAGE, node.get("name"), name, desc.get("id"), "fixed.no-clip",
+                    "요소 하단 {:g} > 고정 바 상단 {:g}".format(bottom, bar_top),
+                    "본문 마지막 요소는 고정 바 위에서 끝나야 함 (내용이 넘치면 시트로 분리하거나 스크롤 2컷)"))
+
+
 def check_frame_size(snap, th, findings):
     """화면 프레임은 390×844. 이름에 @360/@430 이 붙은 검증 프레임만 예외."""
     for node, screen, state, width in screen_frames(snap):
@@ -967,6 +1032,7 @@ def run_audit(snapshot_path, rules_path, brief_path=None, icons_path=None, scree
     check_primary_count(snap, findings)
     check_tap_targets(snap, th, frame_ids, findings)
     check_safe_area(snap, th, findings)
+    check_no_clip(snap, th, findings)
     check_frame_size(snap, th, findings)
     check_icon_size(snap, th, frame_ids, findings)
     check_icon_allowlist(snap, allowlist, frame_ids, findings)
