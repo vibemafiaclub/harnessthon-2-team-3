@@ -122,3 +122,7 @@ python3 -m unittest scripts/tests/test_figma_audit.py
 
 픽스처: `scripts/tests/fixtures/snapshot_ok.json`(결함 0건), `snapshot_bad.json`(서로 다른 규칙 18개 실패),
 `design-rules.md`, `brief.md`, `icons.md`.
+
+### 화면 구성표 검사 (`--screens design/screens.md`)
+
+`design/screens.md`의 구성 열(위→아래 컴포넌트 목록)과 `<화면>/default` 프레임의 최상위 인스턴스를 대조한다. 빠진 컴포넌트, 구성표 밖 컴포넌트, 구성표에 없는 화면을 `component.manifest`로 보고한다. 파일이 없으면 검사를 건너뛴다. 형식은 `references/final-preview.md` 하단 표 참고.

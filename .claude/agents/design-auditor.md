@@ -26,7 +26,7 @@ description: figma-builder가 만든 Figma 화면을 design/design-rules.md 기�
 A단계는 LLM이 판단하지 않는다. 아래 명령을 실행하고 출력을 그대로 리포트에 붙인다.
 
 ```
-python3 scripts/figma_audit.py --snapshot design/figma-snapshot.json --rules design/design-rules.md --brief design/brief.md --icons design/icons.md --fix-list design/fix-list.md
+python3 scripts/figma_audit.py --snapshot design/figma-snapshot.json --rules design/design-rules.md --brief design/brief.md --icons design/icons.md --screens design/screens.md --fix-list design/fix-list.md
 ```
 
 스냅샷이 없거나 오래됐으면(빌더 마지막 STAGE 이후 갱신 안 됨) `scripts/figma_snapshot.js`를 `use_figma`로 실행해 먼저 갱신한다. 아래 표는 스크립트가 구현한 항목 목록이며, 스크립트가 다루지 못한다고 명시한 항목만 LLM이 `use_figma` 조회로 보완한다.

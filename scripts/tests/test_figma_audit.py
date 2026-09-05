@@ -325,3 +325,37 @@ class SnapshotShapeTest(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class ComponentManifestTest(unittest.TestCase):
+    SCREENS = FIXTURES / "screens.md"
+    SCREENS_BAD = FIXTURES / "screens_bad.md"
+
+    def test_manifest_parsed(self):
+        manifest, warnings = figma_audit.parse_screens_manifest(str(self.SCREENS))
+        self.assertEqual(manifest["home"], ["AppBar", "Card", "Button", "TabBar"])
+        self.assertEqual(manifest["detail"], manifest["Detail".lower()])
+        self.assertEqual(warnings, [])
+
+    def test_ok_snapshot_matches_manifest(self):
+        findings, _, stats = figma_audit.run_audit(
+            str(SNAPSHOT_OK), str(RULES), str(BRIEF), str(ICONS), str(self.SCREENS))
+        self.assertNotIn("component.manifest", keys_of(findings))
+        self.assertEqual(stats["manifestScreens"], 2)
+
+    def test_bad_manifest_reports_missing_extra_and_unlisted_screen(self):
+        findings, _, _ = figma_audit.run_audit(
+            str(SNAPSHOT_OK), str(RULES), str(BRIEF), str(ICONS), str(self.SCREENS_BAD))
+        msgs = [f.actual for f in findings if f.key == "component.manifest"]
+        self.assertTrue(any("BottomCTA 없음" in m for m in msgs), msgs)
+        self.assertTrue(any("Button (구성표 밖)" in m for m in msgs), msgs)
+        self.assertTrue(any("screens.md에 없는 화면" in m for m in msgs), msgs)
+
+    def test_cli_accepts_screens_flag(self):
+        proc = subprocess.run(
+            [sys.executable, str(SCRIPTS_DIR / "figma_audit.py"),
+             "--snapshot", str(SNAPSHOT_OK), "--rules", str(RULES),
+             "--screens", str(self.SCREENS_BAD), "--json"],
+            capture_output=True, text=True)
+        self.assertEqual(proc.returncode, 1, proc.stdout + proc.stderr)
+        self.assertIn("component.manifest", proc.stdout)

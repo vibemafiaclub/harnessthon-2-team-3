@@ -396,6 +396,84 @@ def icon_base_name(node):
     return None
 
 
+def parse_screens_manifest(path):
+    """design/screens.md 의 구성표를 읽는다. {화면명 또는 slug(소문자): [컴포넌트명, ...]}"""
+    text = Path(path).read_text(encoding="utf-8")
+    manifest, warnings = {}, []
+    header = None
+    for line in text.splitlines():
+        line = line.strip()
+        if not line.startswith("|"):
+            continue
+        cells = [c.strip() for c in line.strip("|").split("|")]
+        if header is None:
+            if "구성" in "".join(cells):
+                header = cells
+            continue
+        if set(line) <= set("|-: "):
+            continue
+        row = dict(zip(header, cells))
+        comp_cell = next((v for k, v in row.items() if "구성" in k), "")
+        screen = row.get("화면") or ""
+        slug = row.get("slug") or ""
+        if not comp_cell or not (screen or slug):
+            continue
+        comps = []
+        for part in re.split(r"[·,]", comp_cell):
+            part = re.sub(r"^[\s①-⑳⓪-⓿]+", "", part).strip()
+            name = re.split(r"[\s(×xX*]", part)[0].strip()
+            if name and name.lower() not in ("icon",):
+                comps.append(name)
+        if not comps:
+            continue
+        for key in (screen, slug):
+            if key:
+                manifest[key.lower()] = comps
+    if not manifest:
+        warnings.append("screens.md에서 구성표를 읽지 못했습니다 ('구성' 열이 있는 표 필요). component.manifest 검사를 건너뜁니다.")
+    return manifest, warnings
+
+
+MANIFEST_IGNORE = {"DeviceFrame", "Icon", "Skeleton"}
+
+
+def check_component_manifest(snap, manifest, findings):
+    """`<화면>/default` 프레임의 최상위 인스턴스가 screens.md 구성표와 일치해야 한다 (빠짐 0, 표 밖 0)."""
+    if not manifest:
+        return
+    for node, screen, state, width in screen_frames(snap):
+        if state != "default" or width:
+            continue
+        expected = manifest.get(screen.lower())
+        if expected is None:
+            findings.append(Finding(
+                SCREENS_PAGE, node.get("name"), node.get("name"), node.get("id"),
+                "component.manifest", "screens.md에 없는 화면", "screens.md 구성표에 행 추가"))
+            continue
+        found = []
+        for desc in snap.descendants(node):
+            if not desc.get("isInstance") or in_label(snap, desc):
+                continue
+            nested = any(a.get("isInstance") for a in snap.ancestors(desc) if a.get("id") != node.get("id"))
+            if nested:
+                continue
+            kind = component_kind(desc)
+            if kind in MANIFEST_IGNORE or kind.startswith("_"):
+                continue
+            found.append((kind, desc))
+        found_kinds = {k for k, _ in found}
+        expected_kinds = set(expected)
+        for missing in sorted(expected_kinds - found_kinds):
+            findings.append(Finding(
+                SCREENS_PAGE, node.get("name"), node.get("name"), node.get("id"),
+                "component.manifest", "{} 없음".format(missing), "screens.md 구성대로 {} 인스턴스 배치".format(missing)))
+        for kind, desc in found:
+            if kind not in expected_kinds:
+                findings.append(Finding(
+                    SCREENS_PAGE, node.get("name"), desc.get("name"), desc.get("id"),
+                    "component.manifest", "{} (구성표 밖)".format(kind), "제거하거나 screens.md에 추가 후 사용자 확인"))
+
+
 def numeric(value):
     return value if isinstance(value, (int, float)) and not isinstance(value, bool) else None
 
@@ -846,7 +924,7 @@ def check_layer_order(snap, findings):
 
 
 # ── 실행 ──────────────────────────────────────────────────────────────────
-def run_audit(snapshot_path, rules_path, brief_path=None, icons_path=None):
+def run_audit(snapshot_path, rules_path, brief_path=None, icons_path=None, screens_path=None):
     """검사를 수행하고 (findings, warnings, stats) 를 돌려준다."""
     data = json.loads(Path(snapshot_path).read_text(encoding="utf-8"))
     snap = Snapshot(data)
@@ -872,6 +950,11 @@ def run_audit(snapshot_path, rules_path, brief_path=None, icons_path=None):
         allowlist, icon_warnings = parse_icon_allowlist(icons_path)
         warnings.extend(icon_warnings)
 
+    manifest = None
+    if screens_path:
+        manifest, manifest_warnings = parse_screens_manifest(screens_path)
+        warnings.extend(manifest_warnings)
+
     findings = []
     check_palette(snap, th, frame_ids, findings)
     check_typography(snap, frame_ids, findings)
@@ -891,6 +974,7 @@ def run_audit(snapshot_path, rules_path, brief_path=None, icons_path=None):
     check_icon_size_by_text(snap, frame_ids, findings)
     check_button_row(snap, frame_ids, findings)
     check_layer_order(snap, findings)
+    check_component_manifest(snap, manifest, findings)
 
     findings.sort(key=lambda f: f.sort_key())
     if data.get("truncated"):
@@ -905,6 +989,7 @@ def run_audit(snapshot_path, rules_path, brief_path=None, icons_path=None):
         "screenFrames": len(frames),
         "screens": screens or [],
         "iconAllowlist": len(allowlist) if allowlist else 0,
+        "manifestScreens": sum(1 for _, sc, st, w in frames if st == "default" and not w and manifest and sc.lower() in manifest),
     }
     return findings, warnings, stats
 
@@ -942,13 +1027,14 @@ def main(argv=None):
     parser.add_argument("--rules", required=True, help="design/design-rules.md 경로")
     parser.add_argument("--brief", help="design/brief.md 경로 (화면 목록 출처)")
     parser.add_argument("--icons", help="design/icons.md 경로 (lucide 아이콘 허용 목록)")
+    parser.add_argument("--screens", help="design/screens.md 경로 (화면별 컴포넌트 구성표)")
     parser.add_argument("--json", action="store_true", help="결과를 JSON으로 출력")
     parser.add_argument("--fix-list", dest="fix_list", help="결함 목록 마크다운 표 저장 경로")
     args = parser.parse_args(argv)
 
     try:
         findings, warnings, stats = run_audit(
-            args.snapshot, args.rules, args.brief, args.icons)
+            args.snapshot, args.rules, args.brief, args.icons, args.screens)
     except FileNotFoundError as exc:
         print("[ERROR] 파일을 찾을 수 없습니다: {}".format(exc), file=sys.stderr)
         return 2
